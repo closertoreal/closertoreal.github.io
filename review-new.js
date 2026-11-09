@@ -116,6 +116,11 @@ captureChange("22",s=>{
  s.output="Выход\n• [ИД] Акт индивидуальных испытаний оборудования (ИД 10)\n• [Документ контроля] Замечания и предписания по результатам испытаний (при наличии)";
 });
 
+const priorContext=Object.fromEntries([["3","Форма ЖАН (только электронная / бумажная с электронным отражением) не определена: см. страницу «Сверка источников»."],["10","Структурные изменения по встречам не внесены: первичные файлы не найдены; в реестре есть открытые вопросы."],["13","Форма ЖАН (только электронная / бумажная с электронным отражением) не определена: см. страницу «Сверка источников»."],["24","Основание исходника: ст. 55 ГрК РФ."]]);
+for(const [code,note] of Object.entries(priorContext)){
+ const current=step(code);
+ if(current)current.action=current.action.split("\n").filter(line=>line.trim()!==note).join("\n");
+}
 /* Навигация и показ протокола: левая схема остаётся доступна, справа весь протокол. */
 const selectedCode=MODEL.steps[state.index]?.code||"0";
 const sm=MODEL.steps.findIndex(x=>x.code==="16");
@@ -200,9 +205,9 @@ stepPanel.querySelector(".question-scroll").insertBefore(notes,stepPanel.querySe
 function renderNotes(){
  const code=MODEL.steps[state.index]?.code||"0";
  floatTitle.textContent="Шаг "+code+" · "+step(code).title;
- const p=protoFor(code);
- notes.classList.toggle("hidden",p.length===0);
- notes.querySelector("#stepNotes").innerHTML=p.map(protoCard).join("")+(changed[code]?compareStep(code):"");
+ const p=protoFor(code),context=priorContext[code];
+ notes.classList.toggle("hidden",p.length===0&&!context);
+ notes.querySelector("#stepNotes").innerHTML=(context?'<article class="legacy-note"><strong>Контекст, зафиксированный до встречи 09.11</strong><p>'+esc(context)+'</p></article>':"")+p.map(protoCard).join("")+(changed[code]?compareStep(code):"");
  notes.querySelectorAll("[data-open-code]").forEach(b=>b.onclick=()=>openStep(b.dataset.openCode));
 }
 function syncSelected(){renderNotes();if(protoMode==="step")renderProtocol();}
