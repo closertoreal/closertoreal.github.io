@@ -37,7 +37,7 @@ function card(x){
   const links=x.steps.filter(c=>MODEL.steps.some(s=>s.code===c)).map(c=>'<button type="button" class="pr-step-link" data-pr-step="'+e(c)+'">шаг '+e(c)+'</button>').join("");
   const cats=PROTOCOL_BOXES.map(([c,n])=>'<label title="'+e(n)+'"><input type="checkbox" data-pr-edit="'+e(x.uid)+'" data-pr-category="'+e(c)+'"'+(x.boxes.includes(c)?' checked':'')+'> '+e(c)+'</label>').join("");
   const input=(name,label,type="text")=>'<div><label>'+label+'</label><input type="'+type+'" data-pr-edit="'+e(x.uid)+'" data-pr-field="'+name+'" value="'+e(x[name])+'"></div>';
-  return '<article class="pr-card"><div class="pr-card-head"><strong>'+e(x.n?"№ "+x.n:"Новая запись")+'</strong><span class="pr-pill kind">'+e(x.kind)+'</span>'+tags+'<span class="pr-pill">'+e(x.status)+'</span></div>'+
+  return '<article class="pr-card" data-pr-uid="'+e(x.uid)+'"><div class="pr-card-head"><strong>'+e(x.n?"№ "+x.n:"Новая запись")+'</strong><span class="pr-pill kind">'+e(x.kind)+'</span>'+tags+'<span class="pr-pill">'+e(x.status)+'</span></div>'+
   '<p class="pr-source">'+e(x.text)+'</p><div class="pr-card-foot"><span>'+e(x.source||"Добавлено вручную")+'</span>'+links+(x.owner?'<span>Ответственный: '+e(x.owner)+'</span>':'')+(x.deadline?'<span>Срок: '+e(x.deadline)+'</span>':'')+'</div>'+
   '<details class="pr-editor"><summary>Классификация, подтверждение, задачи и доказательства</summary><div class="pr-editor-grid"><div class="wide"><label>Разделы Confluence (можно несколько)</label><div class="pr-category-choices">'+cats+'</div></div>'+
   '<div><label>Статус записи</label><select data-pr-edit="'+e(x.uid)+'" data-pr-field="status">'+options(REC_STATES,x.status)+'</select></div>'+
@@ -54,7 +54,7 @@ function renderList(){
   renderMetrics();
 }
 function renderLog(){document.getElementById("prImportLog").innerHTML=pr.imports.length?'<strong>Импортов: '+pr.imports.length+'</strong><ul>'+pr.imports.slice(-5).map(x=>'<li>'+e(x.from)+' · '+e(x.date||"без даты")+' · '+x.added+' записей</li>').join("")+'</ul>':'<p>Импортов пока не было.</p>'}
-function renderAll(){renderBoxes();renderBoxStatus();renderList();renderLog()}
+function renderAll(){renderBoxes();renderBoxStatus();renderList();renderLog();renderCompact()}
 function blob(name,content,type){const b=new Blob([content],{type}),url=URL.createObjectURL(b),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 function exportJson(){blob("СИД_протокол_NEW_"+(pr.meeting.date||"без_даты")+".json",JSON.stringify({format:"sid-protocol-new-v1",exportedAt:new Date().toISOString(),author:pr.meeting.moderator||state.fio||"",data:pr},null,2),"application/json;charset=utf-8")}
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return(h>>>0).toString(36)}
@@ -91,10 +91,112 @@ function schemeView(view){
   document.getElementById("newViewScheme").classList.toggle("active",!protocol);
   document.getElementById("newViewProtocol").classList.toggle("active",protocol);
   document.getElementById("download").classList.toggle("hidden",protocol);
-  if(protocol)renderAll();
+  if(protocol)renderAll();else renderCompact();
   window.scrollTo(0,0);
 }
-function goStep(code){const i=MODEL.steps.findIndex(s=>s.code===code);if(i<0)return;schemeView("scheme");go(i);document.getElementById("questionTitle").scrollIntoView({block:"start",behavior:"smooth"})}
+function goStep(code,uid=null){const i=MODEL.steps.findIndex(s=>s.code===code);if(i<0)return;schemeView("scheme");if(uid)pickCompact(uid,code);else go(i);if(window.innerWidth<=1050)document.getElementById("questionTitle").scrollIntoView({block:"start",behavior:"smooth"})}
+/* The protocol is the bottom panel of the scheme. Selecting a record is a navigational action:
+   record -> linked step(s) on diagram -> edited step text with red/green inline diff. */
+let compactFilter="linked",compactSearch="",compactSelectedUid=null,compactSelectedCode=null,compactNavigating=false;
+function compactSteps(x){
+  const known=new Set(MODEL.steps.map(s=>s.code));
+  return [...new Set((Array.isArray(x.steps)?x.steps:[]).filter(c=>known.has(c)))];
+}
+function compactIsDecision(x){return /Решение|Правка схемы/i.test(x.kind)}
+function compactMatches(x){
+  const linked=compactSteps(x);
+  if(compactFilter==="linked")return linked.length>0;
+  if(compactFilter==="step")return linked.includes(MODEL.steps[state.index]?.code);
+  if(compactFilter==="decisions")return linked.length>0&&compactIsDecision(x);
+  if(compactFilter==="unclassified")return unclassified(x);
+  return true;
+}
+function compactCard(x){
+  const linked=compactSteps(x),active=compactSelectedUid===x.uid,current=MODEL.steps[state.index]?.code;
+  const related=linked.includes(current),number=x.n?"№ "+x.n:"Новая запись";
+  const boxes=x.boxes.length?x.boxes.map(c=>'<span class="prc-box'+(CODES.includes(c)?"":" unclassified")+'" title="'+e(NAMES[c]||"Вне структуры")+'">'+e(c)+'</span>').join(""):'<span class="prc-box unclassified">Вне структуры</span>';
+  const steps=linked.length?linked.map(c=>'<button type="button" class="prc-step'+(active&&compactSelectedCode===c?" active":"")+'" data-prc-step="'+e(c)+'" data-prc-uid="'+e(x.uid)+'" aria-label="Показать шаг '+e(c)+' для пункта '+e(number)+'">Шаг '+e(c)+'</button>').join(""):'<span class="prc-muted">Без привязки к шагу</span>';
+  return '<article class="prc-card'+(active?" is-active":"")+(related?" is-step-related":"")+'" data-prc-card="'+e(x.uid)+'">'+
+    '<button type="button" class="prc-main" data-prc-pick="'+e(x.uid)+'" aria-pressed="'+String(active)+'"><span class="prc-card-top"><span class="prc-num">'+e(number)+'</span><span class="prc-kind">'+e(x.kind)+'</span>'+boxes+'<span class="prc-status">'+e(x.status)+'</span></span><span class="prc-preview">'+e(x.text)+'</span></button>'+
+    '<div class="prc-foot">'+steps+'</div></article>';
+}
+function renderCompact(){
+  const list=document.getElementById("prcList"),panel=document.getElementById("prcPanel");
+  if(!list||!panel)return;
+  const all=entries();
+  const matchesSearch=x=>!compactSearch||[x.n,x.uid,x.kind,x.text,x.note,x.owner,x.source,...x.boxes,...x.steps].join(" ").toLowerCase().includes(compactSearch);
+  const shown=all.filter(x=>compactMatches(x)&&matchesSearch(x));
+  const pos=list.scrollTop;
+  list.innerHTML=shown.length?shown.map(compactCard).join(""):'<div class="prc-empty">Нет пунктов по выбранному фильтру. Это не означает, что раздел проверен или согласован. Проверь «Все» или «Вне структуры».</div>';
+  list.scrollTop=pos;
+  const count=document.getElementById("prcCount");
+  if(count)count.textContent='Показано '+shown.length+' из '+all.length+' пунктов · шаг '+MODEL.steps[state.index].code;
+  panel.querySelectorAll("[data-prc-filter]").forEach(b=>{const active=b.dataset.prcFilter===compactFilter;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active))});
+  const selected=compactSelectedUid?all.find(x=>x.uid===compactSelectedUid):null;
+  const context=document.getElementById("prcSelection");
+  document.querySelectorAll("#diagram .node").forEach(n=>n.classList.toggle("prc-related",!!selected&&compactSteps(selected).includes(n.dataset.code)));
+  if(!context)return;
+  if(!selected){context.classList.add("hidden");context.innerHTML="";return}
+  const codes=compactSteps(selected),current=MODEL.steps[state.index].code,linked=codes.includes(current);
+  const oldIndex=OLD_SEQUENCE.indexOf(current);
+  const changed=!!CHANGE_BASELINE[current]||oldIndex!==state.index;
+  const summary=linked?(changed?"В рабочей схеме есть изменения этого шага. Их текст выделен ниже красным и зелёным.":"Связь с шагом есть, но изменений его текста в рабочей схеме не зафиксировано."):"У пункта нет привязки к текущему шагу; показанный шаг не следует считать изменённым по этому пункту.";
+  context.innerHTML='<div class="prc-selection-head"><strong>'+e(selected.n?"Пункт протокола № "+selected.n:"Новая запись протокола")+'</strong><span class="prc-kind">'+e(selected.kind)+'</span>'+
+    (selected.boxes.length?selected.boxes.map(c=>'<span class="prc-box'+(CODES.includes(c)?"":" unclassified")+'">'+e(c)+'</span>').join(""):'<span class="prc-box unclassified">Вне структуры</span>')+
+    '<span class="prc-status">'+e(selected.status)+'</span></div>'+
+    '<p>'+e(selected.text)+'</p>'+
+    (selected.note?'<p class="prc-note"><strong>Проработка:</strong> '+e(selected.note)+'</p>':"")+
+    '<div class="prc-context">'+e(summary)+'</div>';
+  context.classList.remove("hidden");
+}
+function pickCompact(uid,requestedCode=null){
+  const x=entries().find(x=>x.uid===uid);
+  if(!x)return;
+  compactSelectedUid=uid;
+  const steps=compactSteps(x);
+  const target=requestedCode&&steps.includes(requestedCode)?requestedCode:(steps.includes(MODEL.steps[state.index].code)?MODEL.steps[state.index].code:steps[0]||null);
+  compactSelectedCode=target;
+  if(target){
+    const i=MODEL.steps.findIndex(s=>s.code===target);
+    if(i>=0){
+      diffMode=true;
+      compactNavigating=true;
+      try{go(i)}finally{compactNavigating=false}
+      const scroll=document.querySelector(".step-panel .question-scroll");
+      if(scroll)scroll.scrollTop=0;
+      if(window.innerWidth<=1050)requestAnimationFrame(()=>document.getElementById("questionTitle").scrollIntoView({block:"start",behavior:"smooth"}));
+      return;
+    }
+  }
+  renderCompact();
+}
+function initCompact(){
+  const panel=document.getElementById("prcPanel");
+  if(!panel)return;
+  panel.querySelectorAll("[data-prc-filter]").forEach(b=>b.addEventListener("click",()=>{
+    compactFilter=b.dataset.prcFilter;
+    document.getElementById("prcList").scrollTop=0;
+    renderCompact();
+  }));
+  document.getElementById("prcSearch").addEventListener("input",ev=>{
+    compactSearch=ev.target.value.trim().toLowerCase();
+    document.getElementById("prcList").scrollTop=0;
+    renderCompact();
+  });
+  document.getElementById("prcList").addEventListener("click",ev=>{
+    const step=ev.target.closest("[data-prc-step]");
+    if(step){pickCompact(step.dataset.prcUid,step.dataset.prcStep);return}
+    const record=ev.target.closest("[data-prc-pick]");
+    if(record)pickCompact(record.dataset.prcPick);
+  });
+  document.getElementById("prcFull").addEventListener("click",()=>schemeView("protocol"));
+  document.getElementById("prcAdd").addEventListener("click",()=>{
+    schemeView("protocol");
+    const input=document.getElementById("prNewText");
+    if(input){input.focus();input.scrollIntoView({behavior:"smooth",block:"center"})}
+  });
+  renderCompact();
+}
 /* Unified inline diff: the old text remains in place; deletions and insertions are marked in one reading flow. */
 let diffMode=true;
 function diffTokens(t){return String(t).match(/[^\s]+[ \t]*|\r?\n|[ \t]+/g)||[]}
@@ -164,7 +266,7 @@ function init(){
   document.getElementById("prSearch").addEventListener("input",ev=>{search=ev.target.value.toLowerCase().trim();renderList()});
   document.getElementById("prBoxes").addEventListener("click",ev=>{const b=ev.target.closest("[data-pr-box]");if(b){selected=b.dataset.prBox;renderBoxes();renderBoxStatus();renderList()}});
   document.getElementById("prBoxStatus").addEventListener("change",ev=>{if(ev.target.matches("[data-pr-box-status]")){pr.boxStatuses[selected]=ev.target.value;save();renderBoxes()}});
-  document.getElementById("prList").addEventListener("click",ev=>{const b=ev.target.closest("[data-pr-step]");if(b)goStep(b.dataset.prStep)});
+  document.getElementById("prList").addEventListener("click",ev=>{const b=ev.target.closest("[data-pr-step]");if(b)goStep(b.dataset.prStep,b.closest("[data-pr-uid]")?.dataset.prUid||null)});
   document.getElementById("prList").addEventListener("input",ev=>{const x=ev.target;if(x.dataset.prEdit&&x.dataset.prField)field(x.dataset.prEdit,x.dataset.prField,x.value)});
   document.getElementById("prList").addEventListener("change",ev=>{const x=ev.target,uid=x.dataset.prEdit;if(!uid)return;if(x.dataset.prCategory){const item=entries().find(y=>y.uid===uid);if(!item)return;const set=new Set(item.boxes);x.checked?set.add(x.dataset.prCategory):set.delete(x.dataset.prCategory);field(uid,"boxes",[...set]);renderBoxes();renderList();return}if(x.dataset.prField){field(uid,x.dataset.prField,x.value);renderBoxes();renderMetrics()}});
   document.getElementById("prCapture").addEventListener("submit",ev=>{ev.preventDefault();const text=document.getElementById("prNewText").value.trim();if(!text)return;const boxes=[...root.querySelectorAll("#prNewBoxes input:checked")].map(x=>x.value);const steps=document.getElementById("prNewSteps").value.split(/[,;\s]+/).filter(Boolean);pr.notes.push({uid:"N-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),n:0,text,kind:document.getElementById("prNewKind").value,boxes,steps,source:"Новая запись: "+(pr.meeting.moderator||state.fio||"автор не указан"),status:"Требует подтверждения",owner:document.getElementById("prNewOwner").value.trim(),deadline:document.getElementById("prNewDeadline").value,evidence:document.getElementById("prNewEvidence").value.trim(),note:""});save();ev.target.reset();selected=boxes[0]||"unclassified";renderAll();message(boxes.length?"Запись сохранена в разделах "+boxes.join(", "):"Запись сохранена в «Не распределено».")});
@@ -176,9 +278,13 @@ function init(){
   document.getElementById("newViewScheme").onclick=()=>schemeView("scheme");
   document.getElementById("newViewProtocol").onclick=()=>schemeView("protocol");
   document.querySelectorAll(".node").forEach(x=>{const code=x.dataset.code,old=OLD_SEQUENCE.indexOf(code),now=MODEL.steps.findIndex(s=>s.code===code);if(CHANGE_BASELINE[code])x.classList.add("new-modified");if(old!==now)x.classList.add("new-moved");if(CHANGE_BASELINE[code]||old!==now)x.title=(old!==now?"Перемещён: "+(old+1)+" → "+(now+1)+". ":"")+"Рабочая версия; требует проверки"});
-  const oldRender=render;render=function(){oldRender();diff()};
-  const oldGo=go;go=function(i,related=null){if(related)diffMode=false;return oldGo(i,related)};
-  renderAll();if(state.fio)diff();
+  const oldRender=render;render=function(){oldRender();diff();renderCompact()};
+  const oldGo=go;go=function(i,related=null){
+    if(related)diffMode=false;
+    if(!compactNavigating&&compactSelectedUid){const code=MODEL.steps[Math.max(0,Math.min(MODEL.steps.length-1,i))]?.code,item=entries().find(x=>x.uid===compactSelectedUid);if(!item||!compactSteps(item).includes(code)){compactSelectedUid=null;compactSelectedCode=null}else compactSelectedCode=code}
+    return oldGo(i,related)
+  };
+  initCompact();renderAll();if(state.fio)diff();
   window.prExportXlsx=function(){const a=entries(),rows=[["ID","Разделы","Тип","Формулировка","Статус","Ответственный","Срок","Шаги","Источник / доказательства","Проработка"],...a.map(x=>[x.n||x.uid,x.boxes.join(", ")||"НЕ РАСПРЕДЕЛЕНО",x.kind,x.text,x.status,x.owner,x.deadline,x.steps.join(", "),[x.source,x.evidence].filter(Boolean).join("\n"),x.note])],summary=[["Раздел","Название","Количество записей","Статус обсуждения"],...PROTOCOL_BOXES.map(([c,n])=>[c,n,count(c),pr.boxStatuses[c]||BOX_STATES[0]]),["!","Не распределено / вне структуры",count("unclassified"),"Требует классификации"]];return{rows,summary,date:pr.meeting.date,blob}};
 }
 init();
