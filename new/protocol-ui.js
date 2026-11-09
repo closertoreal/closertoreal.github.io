@@ -121,6 +121,7 @@ function fieldText(value,field){
 function diff(){
   const root=document.getElementById("newDiff"),s=MODEL.steps[state.index],base=CHANGE_BASELINE[s.code];
   if(!root)return;
+  document.documentElement.classList.toggle("new-diff-active",!!base&&diffMode&&["title","input","action","output"].some(k=>base[k]!==s[k]));
   const oldIndex=OLD_SEQUENCE.indexOf(s.code),moved=oldIndex!==state.index;
   if(!base&&!moved){root.classList.add("hidden");return}
   root.classList.remove("hidden");
