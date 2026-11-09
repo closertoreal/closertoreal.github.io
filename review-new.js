@@ -115,7 +115,7 @@ const sm=MODEL.steps.findIndex(x=>x.code==="16"),target=MODEL.steps.findIndex(x=
 if(sm>=0&&target>=0){const [sixteen]=MODEL.steps.splice(sm,1);MODEL.steps.splice(MODEL.steps.findIndex(x=>x.code==="12"),0,sixteen);}
 const adjusted=MODEL.steps.findIndex(x=>x.code===priorIndexCode);if(adjusted>=0)state.index=adjusted;
 const changes=Object.fromEntries(MODEL.steps.filter(s=>originalSnapshot[s.code]&&["title","input","action","output"].some(f=>originalSnapshot[s.code][f]!==s[f])).map(s=>[s.code,true]));
-const protoCard=(p)=>'<article class="protocol-card type-'+(p[1]==="AS IS"?"asis":p[1].includes("Предложение")?"suggestion":p[1].includes("Орг")?"org":"rule")+'"><strong><span class="type">'+esc(p[0])+'. ['+esc(p[1])+']</span><span class="area-tag">Раздел '+esc(p[4])+(p[2]?' · Шаг '+esc(p[3]):'')+'</span></strong><p>'+esc(p[2])+'</p></article>';
+const protoCard=(p)=>'<article class="protocol-card type-'+(p[1]==="AS IS"?"asis":p[1].includes("Предложение")?"suggestion":p[1].includes("Орг")?"org":"rule")+'"><strong><span class="type">'+esc(p[0])+'. ['+esc(p[1])+']</span><span class="area-tag">Раздел '+esc(p[4])+(p[3]?' · Шаг '+esc(p[3]):'')+'</span></strong><p>'+esc(p[2])+'</p></article>';
 const stepCodes=t=>t.split(",").map(x=>x.trim()).filter(Boolean);
 const protocolFor=(code)=>protocol.filter(p=>stepCodes(p[3]).includes(code));
 let protoMode="step",reviewMode="comments";
