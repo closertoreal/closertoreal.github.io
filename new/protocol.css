@@ -138,6 +138,8 @@
 .prc-selection p{margin:0 0 6px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6;color:#2d4b47}
 .prc-selection .prc-note{font-size:11px;color:#5a7770;border-top:1px solid #d4e8df;padding-top:6px;margin-top:6px}
 .prc-selection .prc-context{font-size:11px;font-weight:730;color:#206a5a}
+.prc-selection > p:first-of-type{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+
 .node.prc-related{box-shadow:inset 0 0 0 2px #68b79b;background:#effaf5}
 .node.prc-related.current{box-shadow:0 0 0 6px #d6f3e6,inset 0 0 0 2px #319a77;background:#f1fbf5}
 @media(max-width:1050px){
