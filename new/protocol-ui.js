@@ -135,7 +135,7 @@ function diff(){
   root.querySelector("#prStepStatus").addEventListener("change",ev=>{pr.stepStatuses[s.code]=ev.target.value;save()});
   const toggle=root.querySelector("#prToggleDiff");
   if(toggle)toggle.addEventListener("click",()=>{diffMode=!diffMode;render()});
-  if(!changed||!diffMode)return;
+  if(!changed||!diffMode){document.querySelectorAll(".quote-inline").forEach(b=>b.removeAttribute("title"));return}
   if(base.title!==s.title)document.getElementById("questionTitle").innerHTML='Шаг '+e(s.code)+'. '+inlineDiff(base.title,s.title);
   for(const k of ["input","action","output"]){
     if(base[k]===s[k])continue;
@@ -176,6 +176,7 @@ function init(){
   document.getElementById("newViewProtocol").onclick=()=>schemeView("protocol");
   document.querySelectorAll(".node").forEach(x=>{const code=x.dataset.code,old=OLD_SEQUENCE.indexOf(code),now=MODEL.steps.findIndex(s=>s.code===code);if(CHANGE_BASELINE[code])x.classList.add("new-modified");if(old!==now)x.classList.add("new-moved");if(CHANGE_BASELINE[code]||old!==now)x.title=(old!==now?"Перемещён: "+(old+1)+" → "+(now+1)+". ":"")+"Рабочая версия; требует проверки"});
   const oldRender=render;render=function(){oldRender();diff()};
+  const oldGo=go;go=function(i,related=null){if(related)diffMode=false;return oldGo(i,related)};
   renderAll();if(state.fio)diff();
   window.prExportXlsx=function(){const a=entries(),rows=[["ID","Разделы","Тип","Формулировка","Статус","Ответственный","Срок","Шаги","Источник / доказательства","Проработка"],...a.map(x=>[x.n||x.uid,x.boxes.join(", ")||"НЕ РАСПРЕДЕЛЕНО",x.kind,x.text,x.status,x.owner,x.deadline,x.steps.join(", "),[x.source,x.evidence].filter(Boolean).join("\n"),x.note])],summary=[["Раздел","Название","Количество записей","Статус обсуждения"],...PROTOCOL_BOXES.map(([c,n])=>[c,n,count(c),pr.boxStatuses[c]||BOX_STATES[0]]),["!","Не распределено / вне структуры",count("unclassified"),"Требует классификации"]];return{rows,summary,date:pr.meeting.date,blob}};
 }
