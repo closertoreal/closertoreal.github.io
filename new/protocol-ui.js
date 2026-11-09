@@ -85,6 +85,7 @@ function importJson(payload){
 }
 function schemeView(view){
   const protocol=view==="protocol";
+  document.getElementById("work").classList.toggle("pr-active",protocol);
   document.querySelector("#work .workspace").classList.toggle("hidden",protocol);
   document.getElementById("newProtocol").classList.toggle("hidden",!protocol);
   document.getElementById("newViewScheme").classList.toggle("active",!protocol);
