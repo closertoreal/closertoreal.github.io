@@ -224,6 +224,7 @@ function toggleMin(){
  if(!minimized)renderNotes();
 }
 function toggleMax(){
+ if(float.classList.contains("is-minimized")){float.classList.remove("is-minimized");float.querySelector("#floatMin").textContent="Свернуть";}
  float.classList.toggle("is-maximized");
  float.querySelector("#floatMax").textContent=float.classList.contains("is-maximized")?"Обычный размер":"На весь экран";
 }
