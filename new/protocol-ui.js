@@ -139,8 +139,9 @@ function renderCompact(){
   if(!selected){context.classList.add("hidden");context.innerHTML="";return}
   const codes=compactSteps(selected),current=MODEL.steps[state.index].code,linked=codes.includes(current);
   const oldIndex=OLD_SEQUENCE.indexOf(current);
-  const changed=!!CHANGE_BASELINE[current]||oldIndex!==state.index;
-  const summary=linked?(changed?"В рабочей схеме есть изменения этого шага. Их текст выделен ниже красным и зелёным.":"Связь с шагом есть, но изменений его текста в рабочей схеме не зафиксировано."):"У пункта нет привязки к текущему шагу; показанный шаг не следует считать изменённым по этому пункту.";
+  const base=CHANGE_BASELINE[current],textChanged=!!base&&["title","input","action","output"].some(k=>base[k]!==MODEL.steps[state.index][k]);
+  const moved=oldIndex!==state.index;
+  const summary=linked?(textChanged?"В рабочей схеме есть текстовые правки этого шага. Удалённое выделено красным, добавленное зелёным.":moved?"Изменён порядок блока на схеме; текст этого шага не менялся.":"Пункт связан с шагом, но текстовых правок по нему в рабочей схеме не зафиксировано."):"У пункта нет привязки к текущему шагу; показанный шаг не следует считать изменённым по этому пункту.";
   context.innerHTML='<div class="prc-selection-head"><strong>'+e(selected.n?"Пункт протокола № "+selected.n:"Новая запись протокола")+'</strong><span class="prc-kind">'+e(selected.kind)+'</span>'+
     (selected.boxes.length?selected.boxes.map(c=>'<span class="prc-box'+(CODES.includes(c)?"":" unclassified")+'">'+e(c)+'</span>').join(""):'<span class="prc-box unclassified">Вне структуры</span>')+
     '<span class="prc-status">'+e(selected.status)+'</span></div>'+
