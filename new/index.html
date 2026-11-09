@@ -190,12 +190,12 @@ button,input,.comment-editor{font:inherit}button{transition:background-color .16
 .content-card .item.related{border:1px solid #e2e5ea;border-left:3px solid #8c97aa;background:#f6f7fa}
 .content-card .related-tag{background:#e8ebf2;color:#59677d}
 </style>
-<link rel="stylesheet" href="./protocol.css?v=3">
+<link rel="stylesheet" href="./protocol.css?v=4">
 </head>
 <body>
 <form id="start" class="start"><h1>СИД · NEW: схема СМР и протокол</h1><p>Рабочая версия схемы по протоколу: 35 шагов, подсветка изменений и отдельный раздел с 63 пунктами протокола по структуре Confluence. Изменения ещё требуют проверки и согласования. Данные сохраняются в этом браузере.</p><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
 <main id="work" class="work hidden">
-  <header class="topbar"><div class="brand">СИД · NEW</div><span class="new-release"><b>Рабочая версия</b> По протоколу</span><span id="who" class="small"></span><nav class="new-tabs" aria-label="Разделы страницы"><button type="button" id="newViewScheme" class="active">Схема СМР</button><button type="button" id="newViewProtocol">Протокол · 63 пункта</button></nav><div class="spacer"></div><button id="download" class="primary">Скачать XLSX</button></header>
+  <header class="topbar"><div class="brand">СИД · NEW</div><span class="new-release"><b>Рабочая версия</b> По протоколу</span><span id="who" class="small"></span><nav class="new-tabs" aria-label="Разделы страницы"><button type="button" id="newViewScheme" class="active">Схема СМР</button><button type="button" id="newViewProtocol">Протокол · 63 пункта</button></nav><div class="spacer"></div><button id="download" class="primary">Схема XLSX</button></header>
   <div class="workspace">
     <section class="panel diagram-panel" aria-labelledby="diagramHeading">
       <header class="panel-head"><div class="panel-caption"><span class="panel-index">01</span><div><h2 id="diagramHeading">Схема процесса</h2><span>Выберите шаг для проверки</span></div></div></header>
@@ -203,10 +203,11 @@ button,input,.comment-editor{font:inherit}button{transition:background-color .16
     </section>
     <div class="review-stack">
       <section class="panel step-panel" aria-labelledby="stepHeading">
-        <header class="panel-head"><div class="panel-caption"><span class="panel-index">02</span><div><h2 id="stepHeading">Проверка шага</h2><span id="questionCounter"></span></div></div></header>
+        <header class="panel-head"><div class="panel-caption"><span class="panel-index">02</span><div><h2 id="stepHeading">Шаг схемы · изменения</h2><span id="questionCounter"></span></div></div></header>
         <div class="question-scroll">
           <div class="progress"><i id="progress"></i></div>
           <div class="question-head"><span class="actor-badge" id="actorBadge"></span><h1 id="questionTitle"></h1></div>
+          <div id="prcSelection" class="prc-selection hidden" aria-label="Выбранный пункт протокола" aria-live="polite"></div>
           <p class="id-legend"><span class="id-tag">ИД</span> Документ или запись, относящиеся к исполнительной документации</p>
           <details class="scope-legend"><summary>Аналитические категории документов</summary><div class="scope-legend-content"><p><strong>[ИД]</strong> - документы, входящие в состав исполнительной документации.</p><p><strong>[Связанный документ]</strong> - документы для формирования, проверки или комплектования ИД, не являющиеся ИД сами по себе.</p><p><strong>[Контекст процесса]</strong> - документы об условиях выполнения работ, не подлежащие автоматическому включению в реестр ИД.</p><p class="scope-caveat">Это рабочая классификация СИД, а не нормативно установленный перечень. Применяется только к документам, для которых категория указана явно.</p></div></details><p class="quote-hint" role="note"><span class="hint-icon" aria-hidden="true">✎</span> Выделите фрагмент текста и нажмите «Цитировать» в соответствующей карточке.</p>
           <div class="reference-notice hidden" id="referenceNotice" role="status" aria-live="polite">
@@ -219,9 +220,10 @@ button,input,.comment-editor{font:inherit}button{transition:background-color .16
             <div class="card-wrap"><div class="step-recap" aria-label="Текущий шаг"></div><article class="content-card" data-section="Действие" style="--card:#8b79bb"><h3><span class="section-label"><span class="section-dot"></span>Действие</span><button class="quote-inline" type="button" aria-label="Цитировать выделенное из действия" disabled>Цитировать</button></h3><div id="action"></div></article></div>
             <div class="card-wrap"><div class="step-recap" aria-label="Текущий шаг"></div><article class="content-card" data-section="Выход" style="--card:#43a58e"><h3><span class="section-label"><span class="section-dot"></span>Выход</span><button class="quote-inline" type="button" aria-label="Цитировать выделенное из выхода" disabled>Цитировать</button></h3><div id="output"></div></article></div>
           </div>
+          <div class="controls prc-step-controls"><button id="back" class="ghost" type="button">Назад</button><span id="saved" class="saved" role="status" aria-live="polite"></span><button id="next" class="primary" type="button">Далее</button></div>
         </div>
       </section>
-      <section class="panel comment-panel" aria-labelledby="commentsHeading">
+      <section class="panel comment-panel hidden" aria-hidden="true" aria-labelledby="commentsHeading">
         <header class="panel-head"><div class="panel-caption"><span class="panel-index">03</span><div><h2 id="commentsHeading">Комментарии</h2><span>Замечания к шагу или ко всей схеме</span></div></div></header>
         <div class="comment-body">
           <div class="comment-tabs" role="tablist" aria-label="Вид комментария">
@@ -236,7 +238,14 @@ button,input,.comment-editor{font:inherit}button{transition:background-color .16
             <div class="comment-pane-head"><h3>Замечания к схеме в целом</h3><span class="overall-note">Один комментарий на всю схему</span></div>
             <div id="overallComment" class="comment-editor" contenteditable="true" role="textbox" aria-label="Комментарий к схеме в целом" aria-multiline="true" data-placeholder="Опишите общие замечания, не относящиеся к отдельному шагу"></div>
           </section>
-          <div class="controls"><button id="back" class="ghost" type="button">Назад</button><span id="saved" class="saved" role="status" aria-live="polite"></span><button id="next" class="primary" type="button">Далее</button></div>
+        </div>
+      </section>
+      <section class="panel protocol-compact-panel" id="prcPanel" aria-labelledby="prcHeading">
+        <header class="panel-head"><div class="panel-caption"><span class="panel-index">03</span><div><h2 id="prcHeading">Протокол встречи</h2><span id="prcCount">Связанные решения и вопросы</span></div></div><button type="button" class="prc-full-link" id="prcFull">Весь протокол</button></header>
+        <div class="prc-body">
+          <div class="prc-toolbar"><div class="prc-filters" role="group" aria-label="Фильтр протокола"><button type="button" class="active" data-prc-filter="linked" aria-pressed="true">Связанные</button><button type="button" data-prc-filter="step" aria-pressed="false">К шагу</button><button type="button" data-prc-filter="decisions" aria-pressed="false">Решения / правки</button><button type="button" data-prc-filter="all" aria-pressed="false">Все</button><button type="button" data-prc-filter="unclassified" aria-pressed="false">Вне структуры</button></div><input type="search" id="prcSearch" placeholder="Поиск по протоколу, №, шагу…" aria-label="Поиск по протоколу"></div>
+          <div id="prcList" class="prc-list" role="region" aria-label="Пункты протокола" tabindex="0"></div>
+          <div class="prc-footer"><span>Все пункты сохранены; категории 00–06, Н и вне структуры.</span><button type="button" id="prcAdd" class="prc-add">+ Новая запись</button></div>
         </div>
       </section>
     </div>
@@ -499,6 +508,6 @@ function downloadXlsx(){
 load();if(state.fio)el('fio').value=state.fio;buildLegend();buildDiagram();
 </script>
 <script src="./protocol-data.js"></script>
-<script src="./protocol-ui.js?v=3"></script>
+<script src="./protocol-ui.js?v=4"></script>
 <script src="./protocol-export.js"></script>
 </body></html>
