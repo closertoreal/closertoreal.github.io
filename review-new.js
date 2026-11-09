@@ -86,7 +86,7 @@ captureChange("14",s=>{
 });
 captureChange("15",s=>{
   s.input=s.input.replace("Исполнительные схемы, профили, протоколы контроля (шаг 14)","Исполнительные схемы и лабораторные протоколы (шаг 14)");
-  s.action="15.1. ПТО ЛОС собирает проект акта с приложениями для предъявляемого объёма работ.\nУ ПТО ЛОС: проект акта с приложениями, при необходимости со ссылками на ранее принятые этапы СМР.\n15.2. ПТО ЛОС формирует приёмочную инспекцию и уведомляет необходимых участников.\nУ участников инспекции: уведомление о приёмочной инспекции.";
+  s.action="15.1. ПТО ЛОС собирает комплект документов на предъявляемый объём работ и, при наличии проекта акта, прикладывает его к комплекту.\nУ ПТО ЛОС: комплект к приёмочной инспекции с проектом акта при наличии и ссылками на документы предыдущих этапов.\n15.2. ПТО ЛОС формирует приёмочную инспекцию и уведомляет необходимых участников.\nУ участников инспекции: уведомление о приёмочной инспекции.";
   s.output="Выход\n• [Проект ИД] Проект акта с приложениями (если подготовлен)\n• [Организационный документ] Уведомление участников инспекции";
 });
 captureChange("17",s=>{
@@ -96,13 +96,13 @@ captureChange("17",s=>{
 });
 captureChange("18",s=>{
  s.title="Приёмочная инспекция предъявленного объёма работ";
- s.action="18.1. Необходимые участники проводят приёмочную инспекцию предъявленного объёма работ и проверяют подтверждающие документы.\nУ участников: результат проверки объёма работ.\n18.2. При положительном результате фиксируется успешное прохождение приёмочной инспекции на конкретный объём работ (применяемая корпоративная форма 4) и оформляются применимые акты.\nУ участников: результат инспекции и акты по применимым видам работ.\n18.3. При наличии замечаний или предписаний ЛОС организует их устранение и повторное предъявление работ.\nУ участников: замечания/предписания и результат повторной инспекции.\n18.4. Для трубопроводов в составе СМР проводятся применимые испытания на прочность и герметичность, промывка, продувка, а для нетехнологических трубопроводов - очистка поршнями; оформляются соответствующие акты.\nУ участников: акты испытаний и очистки применимых трубопроводов.";
+ s.action="18.1. ЛОС предъявляет участникам инспекции выполненный объём работ и комплект подтверждающих документов.\\nУ участников: предъявленный объём и документы для проверки.\n18.2. ЛОС проводит предусмотренные РД испытания трубопроводов на прочность и герметичность, промывку, продувку, а для нетехнологических трубопроводов - очистку поршнями, если применимо.\\nУ ЛОС: результаты выполненных испытаний и очистки.\\n18.3. Уполномоченные участники приёмочной инспекции проверяют предъявленный объём работ и результаты применимых испытаний.\\nУ участников: результат приёмочной проверки.\\n18.4. При положительном результате участники фиксируют приёмку конкретного объёма в применяемой форме 4 и оформляют соответствующие виду работ акты.\\nУ участников: результат инспекции и применимые акты приёмки и испытаний.\\n18.5. При выявлении нарушений участники инспекции фиксируют замечания или предписания; ЛОС устраняет их и повторно предъявляет работы.\\nУ участников: замечания/предписания, подтверждения устранения и результат повторной инспекции.";
  s.output="Выход\n• [Результат] Успешно пройденная приёмочная инспекция на конкретный объём работ (форма 4)\n• [ИД] Применимые акты приёмки работ (АОСР, АОСК, АОУСИТО и другие в зависимости от вида работ)\n• [ИД] Акты испытаний, промывки и продувки технологических трубопроводов (если применимо)\n• [ИД] Акт очистки нетехнологических трубопроводов поршнями (если применимо)\n• [Документы качества монтажа] Свидетельство о монтаже или удостоверение о качестве монтажа технологических трубопроводов (по применимой нормативной документации)\n• [Документ контроля] Замечания/предписания, устранение и повторное предъявление работ (при наличии)";
 });
 captureChange("21",s=>{
  s.title="Внутритрубная диагностика нетехнологических трубопроводов (если предусмотрена ПД)";
  s.input="Вход\n• [Результат] Подготовленный трубопровод\n• [ПД] Требование о внутритрубной диагностике (если предусмотрено)\n• [РД] Требования к диагностике";
- s.action="21.1. Исполнитель проводит внутритрубную диагностику нетехнологического трубопровода в предусмотренном ПД объёме.\nУ исполнителя: результаты диагностики.\n21.2. Исполнитель оформляет технический отчёт по результатам диагностики.\nУ участников: технический отчёт.\n21.3. При выявлении дефектов организуется их устранение и оформление дополнительного комплекта ИД.\nУ участников: подтверждение устранения дефектов.";
+ s.action="21.1. Исполнитель проводит внутритрубную диагностику нетехнологического трубопровода в предусмотренном ПД объёме.\nУ исполнителя: результаты диагностики.\n21.2. Исполнитель оформляет технический отчёт по результатам диагностики.\nУ участников: технический отчёт.\n21.3. При выявлении дефектов ЛОС устраняет дефекты и оформляет дополнительный комплект ИД по выполненным исправлениям.\nУ участников: подтверждение устранения дефектов.";
  s.output="Выход\n• [ИД] Технический отчёт внутритрубной диагностики (если предусмотрено ПД)\n• [ИД] Дополнительный комплект документов по устранённым дефектам (при наличии)";
 });
 captureChange("22",s=>{
@@ -110,88 +110,166 @@ captureChange("22",s=>{
  s.action=s.action.replace("22.2. Участники испытаний оформляют акты индивидуальных испытаний оборудования.","22.2. Участники испытаний фиксируют результаты, замечания и предписания при их наличии и оформляют акты индивидуальных испытаний оборудования.");
  s.output="Выход\n• [ИД] Акт индивидуальных испытаний оборудования (ИД 10)\n• [Документ контроля] Замечания и предписания по результатам испытаний (при наличии)";
 });
-const priorIndexCode=MODEL.steps[state.index]?.code;
-const sm=MODEL.steps.findIndex(x=>x.code==="16"),target=MODEL.steps.findIndex(x=>x.code==="12");
-if(sm>=0&&target>=0){const [sixteen]=MODEL.steps.splice(sm,1);MODEL.steps.splice(MODEL.steps.findIndex(x=>x.code==="12"),0,sixteen);}
-const adjusted=MODEL.steps.findIndex(x=>x.code===priorIndexCode);if(adjusted>=0)state.index=adjusted;
-const changes=Object.fromEntries(MODEL.steps.filter(s=>originalSnapshot[s.code]&&["title","input","action","output"].some(f=>originalSnapshot[s.code][f]!==s[f])).map(s=>[s.code,true]));
-const protoCard=(p)=>'<article class="protocol-card type-'+(p[1]==="AS IS"?"asis":p[1].includes("Предложение")?"suggestion":p[1].includes("Орг")?"org":"rule")+'"><strong><span class="type">'+esc(p[0])+'. ['+esc(p[1])+']</span><span class="area-tag">Раздел '+esc(p[4])+(p[3]?' · Шаг '+esc(p[3]):'')+'</span></strong><p>'+esc(p[2])+'</p></article>';
-const stepCodes=t=>t.split(",").map(x=>x.trim()).filter(Boolean);
-const protocolFor=(code)=>protocol.filter(p=>stepCodes(p[3]).includes(code));
-let protoMode="step",reviewMode="comments";
-const stack=document.querySelector(".review-stack");
-const stepPanel=stack.querySelector(".step-panel"),commentPanel=stack.querySelector(".comment-panel");
-const questionScroll=stepPanel.querySelector(".question-scroll");
-function createButton(text,onClick,title){const b=document.createElement("button");b.type="button";b.className="ghost";b.textContent=text;if(title)b.title=title;b.addEventListener("click",onClick);return b;}
-const stepActions=document.createElement("div");stepActions.className="panel-actions";
-const collapseButton=createButton("Свернуть шаг",()=>setCollapsed(true));
-const modalButton=createButton("Шаг на весь экран",()=>openModal());
-const cardSizeLabel=document.createElement("label");cardSizeLabel.textContent="Высота карточек";
-const cardRange=document.createElement("input");cardRange.type="range";cardRange.min="170";cardRange.max="720";cardRange.value="320";cardRange.step="10";cardRange.setAttribute("aria-label","Высота карточек в пикселях");
-cardSizeLabel.append(cardRange);stepActions.append(cardSizeLabel,modalButton,collapseButton);stepPanel.querySelector(".panel-head").append(stepActions);
-const expandButton=createButton("Показать шаг",()=>setCollapsed(false));
-expandButton.className="ghost";expandButton.hidden=true;
-commentPanel.querySelector(".panel-head").append(expandButton);
-const resizer=document.createElement("div");resizer.className="panel-resizer";resizer.setAttribute("role","separator");resizer.setAttribute("tabindex","0");resizer.setAttribute("aria-label","Изменить высоту блока шага");resizer.setAttribute("aria-orientation","horizontal");
-stack.insertBefore(resizer,commentPanel);
-function setCollapsed(collapsed){
- stack.classList.toggle("step-collapsed",collapsed);
- expandButton.hidden=!collapsed;
- if(collapsed){setReviewMode("protocol");}
+
+/* Навигация и показ протокола: левая схема остается доступна, справа весь протокол. */
+const selectedCode=MODEL.steps[state.index]?.code||"0";
+const sm=MODEL.steps.findIndex(x=>x.code==="16");
+if(sm>=0){const [sixteen]=MODEL.steps.splice(sm,1);MODEL.steps.splice(MODEL.steps.findIndex(x=>x.code==="12"),0,sixteen);}
+state.index=Math.max(0,MODEL.steps.findIndex(x=>x.code===selectedCode));
+const changed=Object.fromEntries(MODEL.steps.filter(s=>originalSnapshot[s.code]&&["title","input","action","output"].some(f=>originalSnapshot[s.code][f]!==s[f])).map(s=>[s.code,true]));
+/* Поскольку входы/выходы изменились, удаляем только ставшие неверными ссылки на документы. */
+for(const k of ["15|0|14","16|4|12","21|1|18","20|1|21"])delete STEP_REFERENCE_TARGETS[k];
+for(const key of Object.keys(OUTPUT_REVERSE_REFERENCES))delete OUTPUT_REVERSE_REFERENCES[key];
+for(const [key,outputs] of Object.entries(STEP_REFERENCE_TARGETS)){
+ const [consumer,item,producer]=key.split("|");
+ for(const i of outputs){
+  if(!step(producer)||i>=lines(step(producer).output).length)continue;
+  const k=producer+"|"+i;
+  (OUTPUT_REVERSE_REFERENCES[k]??=[]).push({consumer,inputIndex:Number(item)});
+ }
 }
-let dragStart=null;
-resizer.addEventListener("pointerdown",e=>{if(window.innerWidth<=1050)return;dragStart={y:e.clientY,height:stepPanel.getBoundingClientRect().height,container:stack.getBoundingClientRect().height};resizer.setPointerCapture(e.pointerId);});
-resizer.addEventListener("pointermove",e=>{if(!dragStart)return;const newPct=Math.max(18,Math.min(76,100*(dragStart.height+e.clientY-dragStart.y)/dragStart.container));stack.style.setProperty("--new-step-height",newPct.toFixed(1)+"%");});
-resizer.addEventListener("pointerup",()=>dragStart=null);
-resizer.addEventListener("pointercancel",()=>dragStart=null);
-resizer.addEventListener("keydown",e=>{if(e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();const now=parseFloat(stack.style.getPropertyValue("--new-step-height"))||52;stack.style.setProperty("--new-step-height",Math.min(76,Math.max(18,now+(e.key==="ArrowUp"?-4:4)))+"%");}});
-cardRange.addEventListener("input",()=>document.documentElement.style.setProperty("--card-height",cardRange.value+"px"));
-const reviewTabs=document.createElement("div");reviewTabs.className="review-tabs";reviewTabs.setAttribute("role","tablist");reviewTabs.setAttribute("aria-label","Комментарии или протокол");
-const commentTop=document.createElement("button"),protoTop=document.createElement("button");
-for(const [b,name] of [[commentTop,"Комментарии"],[protoTop,"Протокол"]]){b.className="review-tab";b.type="button";b.textContent=name;b.setAttribute("role","tab");reviewTabs.append(b)}
-commentPanel.insertBefore(reviewTabs,commentPanel.querySelector(".comment-body"));
-const protocolPane=document.createElement("section");protocolPane.className="protocol-view hidden";protocolPane.setAttribute("aria-label","Изменения по протоколу");
-commentPanel.append(protocolPane);
-commentTop.onclick=()=>setReviewMode("comments");protoTop.onclick=()=>setReviewMode("protocol");
-function setReviewMode(mode){reviewMode=mode;commentTop.classList.toggle("active",mode==="comments");protoTop.classList.toggle("active",mode==="protocol");commentTop.setAttribute("aria-selected",String(mode==="comments"));protoTop.setAttribute("aria-selected",String(mode==="protocol"));commentPanel.querySelector(".comment-body").classList.toggle("hidden",mode!=="comments");protocolPane.classList.toggle("hidden",mode!=="protocol");commentPanel.querySelector("#commentsHeading").textContent=mode==="comments"?"Комментарии":"Протокол встречи";if(mode==="protocol")renderProtocol();}
-function renderProtocol(){
- const current=MODEL.steps[state.index]?.code||"";
- const list=protoMode==="all"?protocol:protocolFor(current);
- protocolPane.innerHTML='<div class="protocol-toolbar"><div class="protocol-scope"><button type="button" id="protoStep" class="'+(protoMode==="step"?"active":"")+'">По шагу '+esc(current)+'</button><button type="button" id="protoAll" class="'+(protoMode==="all"?"active":"")+'">Весь протокол</button></div><span class="small">'+list.length+' записей</span></div>'
- +'<div class="protocol-summary"><span class="protocol-badge">09.11.2026</span><span class="protocol-badge">Аналитическая версия</span><span class="protocol-badge">01–06 / Н / 00</span></div>'
- +(list.length?list.map(protoCard).join(""):'<p class="nothing">Для этого шага в расширенной MN нет отдельного пункта. Можно перейти к полному протоколу.</p>')
- +(protoMode==="step"&&changes[current]?diffFor(current):'');
- protocolPane.querySelector("#protoStep").onclick=()=>{protoMode="step";renderProtocol()};
- protocolPane.querySelector("#protoAll").onclick=()=>{protoMode="all";renderProtocol()};
-}
-function diffFor(code){
- const o=originalSnapshot[code],n=step(code);
- const fields=[["title","Название"],["input","Вход"],["action","Действие"],["output","Выход"]].filter(([k])=>o[k]!==n[k]);
- return '<div class="protocol-diff"><h3>Сравнение редакций шага '+esc(code)+'</h3>'+fields.map(([k,label])=>'<details><summary>'+label+' · было / стало</summary><div class="two-cols"><div><strong>До встречи</strong><pre>'+esc(o[k])+'</pre></div><div><strong>NEW</strong><pre>'+esc(n[k])+'</pre></div></div></details>').join("")+'</div>';
-}
-const dialog=document.createElement("dialog");dialog.className="step-modal";
-dialog.innerHTML='<header class="modal-bar"><h2>Просмотр шага на весь экран</h2><button type="button" class="ghost" id="modalCloseNew">Закрыть ✕</button></header><div class="modal-mount"></div>';
-document.body.append(dialog);
-dialog.querySelector("#modalCloseNew").onclick=()=>dialog.close();
-dialog.addEventListener("close",()=>{const scroll=dialog.querySelector(".question-scroll");if(scroll)stepPanel.append(scroll);if(reviewMode==="protocol")renderProtocol();});
-function openModal(){setCollapsed(false);const mount=dialog.querySelector(".modal-mount");mount.append(questionScroll);if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");}
+function changeCards(){document.querySelectorAll(".node").forEach(n=>{const related=protoFor(n.dataset.code);n.classList.toggle("has-new-change",related.some(p=>p[1]==="Правка схемы"));n.title="Шаг "+n.dataset.code+(related.length?" · "+related.length+" записей протокола":"");})}
 function updateFlow(){
  const row=[...document.querySelectorAll(".diagram .parallel-row")].find(r=>r.querySelector('.node[data-code="16"]')&&r.querySelector('.node[data-code="12"]'));
  if(!row)return;
- const parent=row.parentElement,nums=["16","12","13","14","17"],nodes=Object.fromEntries(nums.map(k=>[k,row.querySelector('.node[data-code="'+k+'"]')]));
+ const ids=["16","12","13","14","17"],nodes=Object.fromEntries(ids.map(k=>[k,row.querySelector('.node[data-code="'+k+'"]')]));
  const zone=document.createElement("div");zone.className="work-flow-logic";
- zone.innerHTML='<div class="parallel-marker">1. Начало выполнения работ</div><div class="single-node" id="newFlowStart"></div><div class="flow-arrow">↓</div><div class="parallel-marker">2. Параллельные и циклические проверки в ходе СМР</div><div class="parallel-row" id="newFlowChecks"></div>';
- row.replaceWith(zone);zone.querySelector("#newFlowStart").append(nodes["16"]);for(const n of ["12","13","14","17"])zone.querySelector("#newFlowChecks").append(nodes[n]);
+ zone.innerHTML='<div class="parallel-marker">1. Выполнение СМР</div><div class="single-node" id="newFlowStart"></div><div class="flow-arrow">↓</div><div class="parallel-marker">2. Контроль в ходе СМР (параллельно, циклически)</div><div class="parallel-row" id="newFlowChecks"></div>';
+ row.replaceWith(zone);zone.querySelector("#newFlowStart").append(nodes["16"]);
+ for(const n of ["12","13","14","17"])zone.querySelector("#newFlowChecks").append(nodes[n]);
 }
-function flagNodes(){document.querySelectorAll(".node").forEach(n=>{const p=protocolFor(n.dataset.code);n.classList.toggle("has-new-change",p.some(x=>x[1].includes("Правка")));n.title=(n.title||"")+(p.length?"\nПротокол: "+p.length+" записей":"")})}
-const priorGo=go; /* навигация остаётся прежней; новый протокол обновляется после клика */
-document.querySelector(".diagram").addEventListener("click",()=>setTimeout(()=>{if(reviewMode==="protocol")renderProtocol()},0));
-["back","next"].forEach(id=>el(id).addEventListener("click",()=>setTimeout(()=>{if(reviewMode==="protocol")renderProtocol()},0)));
-document.querySelector(".question-scroll").addEventListener("click",()=>setTimeout(()=>{if(reviewMode==="protocol")renderProtocol()},0));
-document.querySelector(".question-scroll").addEventListener("click",e=>{if(e.target.closest("a.step-reference")&&reviewMode==="protocol")setTimeout(renderProtocol,0)});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&dialog.hasAttribute("open"))dialog.close()});
-buildDiagram();updateFlow();flagNodes();
+const protoFor=c=>protocol.filter(p=>p[3].split(",").map(x=>x.trim()).includes(c));
+const protoCard=p=>{
+ const cls=p[1]==="AS IS"?"asis":p[1].includes("Предложение")?"suggestion":p[1].includes("Орг")?"org":"rule";
+ const codes=p[3].split(",").map(x=>x.trim()).filter(c=>step(c));
+ const goButton=codes.length?'<button class="proto-open-step" type="button" data-open-code="'+esc(codes[0])+'">Открыть шаг '+esc(codes[0])+'</button>':"";
+ return '<article class="protocol-card type-'+cls+'"><strong><span class="type">'+esc(p[0])+'. ['+esc(p[1])+']</span><span class="area-tag">Артефакт '+esc(p[4])+(p[3]?' · шаг '+esc(p[3]):'')+'</span></strong><p>'+esc(p[2])+'</p>'+goButton+'</article>';
+};
+function compareStep(c){
+ const old=originalSnapshot[c],now=step(c);
+ if(!old||!now)return "";
+ return '<div class="protocol-diff"><h3>Изменения в шаге '+esc(c)+'</h3>'+[["title","Название"],["input","Вход"],["action","Действие"],["output","Выход"]].filter(([k])=>old[k]!==now[k]).map(([k,label])=>'<details><summary>'+label+' · было / стало</summary><div class="two-cols"><div><strong>Было</strong><pre>'+esc(old[k])+'</pre></div><div><strong>NEW</strong><pre>'+esc(now[k])+'</pre></div></div></details>').join("")+'</div>';
+}
+const workspace=document.querySelector(".workspace");
+const diagramPanel=workspace.querySelector(".diagram-panel");
+const stack=workspace.querySelector(".review-stack");
+const stepPanel=stack.querySelector(".step-panel");
+const commentPanel=stack.querySelector(".comment-panel");
+const commentBody=commentPanel.querySelector(".comment-body");
+const questionScroll=stepPanel.querySelector(".question-scroll");
+let protoMode="all";
+const protocolView=document.createElement("div");protocolView.className="protocol-view";
+commentPanel.querySelector(".panel-head h2").textContent="Протокол встречи · 09.11";
+commentPanel.querySelector(".panel-head .panel-caption span:not(.panel-index)").textContent="Решения, факты AS IS и вопросы для дальнейшей детализации";
+commentPanel.append(protocolView);
+function renderProtocol(){
+ const code=MODEL.steps[state.index]?.code||"0";
+ const list=protoMode==="all"?protocol:protoFor(code);
+ protocolView.innerHTML='<div class="protocol-toolbar"><div class="protocol-scope"><button id="showAllProtocol" type="button" class="'+(protoMode==="all"?"active":"")+'">Весь протокол</button><button id="showStepProtocol" type="button" class="'+(protoMode==="step"?"active":"")+'">По шагу '+esc(code)+'</button></div><span class="small">'+list.length+' записей</span></div>'
+ +'<p class="protocol-summary"><span class="protocol-badge">Расширенная аналитическая MN</span><span class="protocol-badge">09.11.2026</span><span class="protocol-badge">00–06 / Н</span></p>'
+ +(list.length?list.map(protoCard).join(""):'<p class="nothing">По выбранному шагу записей нет. Переключись на весь протокол.</p>')
+ +(protoMode==="step"&&changed[code]?compareStep(code):"");
+ protocolView.querySelector("#showAllProtocol").onclick=()=>{protoMode="all";renderProtocol()};
+ protocolView.querySelector("#showStepProtocol").onclick=()=>{protoMode="step";renderProtocol()};
+ protocolView.querySelectorAll("[data-open-code]").forEach(b=>b.onclick=()=>openStep(b.dataset.openCode));
+}
+/* Боковая колонка содержит ТОЛЬКО протокол; редактор и карточки шагов перемещаем в плавающее окно. */
+const float=document.createElement("section");float.className="step-float hidden";float.setAttribute("aria-label","Редактор выбранного шага");
+float.innerHTML='<header class="float-bar"><div class="float-drag"><span class="float-icon">◫</span><div><strong id="floatTitle">Шаг процесса</strong><small>Перетащи окно за заголовок · схема и протокол остаются доступны</small></div></div><div class="float-bar-actions"><button class="ghost" type="button" id="floatMax">На весь экран</button><button class="ghost" type="button" id="floatMin">Свернуть</button><button class="ghost" type="button" id="floatClose">Закрыть</button></div></header><div class="float-content"><div class="float-step-slot"></div><div class="float-grip" tabindex="0" role="separator" aria-label="Изменить высоту карточек шага и комментариев" aria-orientation="horizontal"></div><section class="float-comment-slot"></section></div>';
+document.body.append(float);
+const floatContent=float.querySelector(".float-content"),floatBar=float.querySelector(".float-bar"),floatStep=float.querySelector(".float-step-slot"),floatComment=float.querySelector(".float-comment-slot");
+floatStep.append(stepPanel);
+floatComment.append(commentBody);
+floatStep.querySelector(".panel-head .panel-caption h2").textContent="Детали шага";
+const floatTitle=float.querySelector("#floatTitle");
+const stepActions=document.createElement("div");stepActions.className="panel-actions";
+const cardSlider=document.createElement("input");cardSlider.type="range";cardSlider.min="160";cardSlider.max="800";cardSlider.step="10";cardSlider.value="320";cardSlider.setAttribute("aria-label","Высота карточек Вход, Действие и Выход");
+const sliderLabel=document.createElement("label");sliderLabel.textContent="Высота карточек";sliderLabel.append(cardSlider);
+stepActions.append(sliderLabel);
+stepPanel.querySelector(".panel-head").append(stepActions);
+cardSlider.addEventListener("input",()=>float.style.setProperty("--card-height",cardSlider.value+"px"));
+const notes=document.createElement("details");notes.className="float-notes";
+notes.innerHTML='<summary>Пояснения и решения по этому шагу</summary><div id="stepNotes"></div>';
+stepPanel.querySelector(".question-scroll").insertBefore(notes,stepPanel.querySelector(".reference-notice"));
+function renderNotes(){
+ const code=MODEL.steps[state.index]?.code||"0";
+ floatTitle.textContent="Шаг "+code+" · "+step(code).title;
+ const p=protoFor(code);
+ notes.classList.toggle("hidden",p.length===0);
+ notes.querySelector("#stepNotes").innerHTML=p.map(protoCard).join("")+(changed[code]?compareStep(code):"");
+ notes.querySelectorAll("[data-open-code]").forEach(b=>b.onclick=()=>openStep(b.dataset.openCode));
+}
+function syncSelected(){renderNotes();if(protoMode==="step")renderProtocol();}
+function openStep(code){
+ const i=MODEL.steps.findIndex(x=>x.code===code);if(i<0)return;
+ if(!el("work").classList.contains("hidden")){baseGo(i);showFloat();syncSelected();}
+ else{state.index=i;showFloat();syncSelected();}
+}
+function showFloat(){float.classList.remove("hidden","is-minimized");float.querySelector("#floatMin").textContent="Свернуть";}
+function closeFloat(){saveCurrent();saveOverall();float.classList.add("hidden");}
+function toggleMin(){
+ const minimized=float.classList.toggle("is-minimized");
+ float.querySelector("#floatMin").textContent=minimized?"Развернуть":"Свернуть";
+ if(!minimized)renderNotes();
+}
+function toggleMax(){
+ float.classList.toggle("is-maximized");
+ float.querySelector("#floatMax").textContent=float.classList.contains("is-maximized")?"Обычный размер":"На весь экран";
+}
+float.querySelector("#floatClose").onclick=closeFloat;
+float.querySelector("#floatMin").onclick=toggleMin;
+float.querySelector("#floatMax").onclick=toggleMax;
+/* Открытие карточки на схеме вызывает то же go(), что и существующая навигация. */
+const baseGo=go;
+go=function(i,related=null){baseGo(i,related);if(!el("work").classList.contains("hidden")){showFloat();syncSelected();}};
+/* Запуск без всплывашки: левая схема и правый протокол доступны сразу после ввода ФИО. */
+el("start").addEventListener("submit",()=>{setTimeout(()=>{float.classList.add("hidden");renderProtocol();},0)});
+/* Переходы вперёд/назад используют исходный go(). */
+for(const id of ["back","next"])el(id).addEventListener("click",()=>setTimeout(syncSelected,0));
+protocolView.addEventListener("click",e=>{const b=e.target.closest("[data-open-code]");if(b){e.preventDefault();openStep(b.dataset.openCode);}});
+/* Перемещение: только за левую часть заголовка, не поверх кнопок. */
+let drag=null;
+const handle=float.querySelector(".float-drag");
+handle.addEventListener("pointerdown",e=>{
+ if(e.button!==0||float.classList.contains("is-maximized"))return;
+ const box=float.getBoundingClientRect();
+ drag={dx:e.clientX-box.left,dy:e.clientY-box.top};handle.setPointerCapture(e.pointerId);
+ float.style.left=box.left+"px";float.style.top=box.top+"px";float.style.right="auto";float.style.bottom="auto";
+});
+handle.addEventListener("pointermove",e=>{
+ if(!drag)return;
+ const w=float.offsetWidth,h=float.querySelector(".float-bar").offsetHeight;
+ const left=Math.min(window.innerWidth-120,Math.max(0,e.clientX-drag.dx));
+ const top=Math.min(window.innerHeight-h,Math.max(0,e.clientY-drag.dy));
+ float.style.left=left+"px";float.style.top=top+"px";
+});
+handle.addEventListener("pointerup",()=>drag=null);
+handle.addEventListener("pointercancel",()=>drag=null);
+/* Регулируем высоту между карточками и редактором. */
+const grip=float.querySelector(".float-grip");let resizing=null;
+grip.addEventListener("pointerdown",e=>{
+ resizing={y:e.clientY,start:floatStep.getBoundingClientRect().height,total:floatContent.getBoundingClientRect().height};
+ grip.setPointerCapture(e.pointerId);
+});
+grip.addEventListener("pointermove",e=>{
+ if(!resizing)return;
+ const pct=Math.max(27,Math.min(80,100*(resizing.start+e.clientY-resizing.y)/resizing.total));
+ floatContent.style.setProperty("--float-step-percent",pct.toFixed(1)+"%");
+});
+grip.addEventListener("pointerup",()=>resizing=null);
+grip.addEventListener("pointercancel",()=>resizing=null);
+grip.addEventListener("keydown",e=>{
+ if(e.key!=="ArrowUp"&&e.key!=="ArrowDown")return;e.preventDefault();
+ const v=parseFloat(floatContent.style.getPropertyValue("--float-step-percent"))||65;
+ floatContent.style.setProperty("--float-step-percent",Math.max(27,Math.min(80,v+(e.key==="ArrowUp"?-5:5)))+"%");
+});
+/* Escape закрывает только всплывающее окно, не стирая комментарии. */
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!float.classList.contains("hidden")){closeFloat();}});
+/* Удаляем устаревший второй блок из правой колонки. */
+stepPanel.classList.remove("hidden");
+commentPanel.querySelector(".comment-body")?.remove();
+buildDiagram();updateFlow();changeCards();
+renderProtocol();
 if(!el("work").classList.contains("hidden"))render();
-setReviewMode("comments");
-window.NEWReview={protocol,originalSnapshot,renderProtocol,openModal,setCollapsed};
+window.NEWReview={protocol,originalSnapshot,renderProtocol,openStep,closeFloat,toggleMin,toggleMax};
 })();
