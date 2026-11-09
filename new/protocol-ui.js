@@ -95,14 +95,54 @@ function schemeView(view){
   window.scrollTo(0,0);
 }
 function goStep(code){const i=MODEL.steps.findIndex(s=>s.code===code);if(i<0)return;schemeView("scheme");go(i);document.getElementById("questionTitle").scrollIntoView({block:"start",behavior:"smooth"})}
+/* Unified inline diff: the old text remains in place; deletions and insertions are marked in one reading flow. */
+let diffMode=true;
+function diffTokens(t){return String(t).match(/[^\s]+[ \t]*|\r?\n|[ \t]+/g)||[]}
+function inlineDiff(before,after){
+  if(before===after)return e(after);
+  const aa=diffTokens(before),bb=diffTokens(after),n=aa.length,m=bb.length;
+  if(n*m>360000)return '<del class="diff-remove">'+e(before)+'</del><ins class="diff-add">'+e(after)+'</ins>';
+  const w=m+1,dp=new Uint16Array((n+1)*w);
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)
+    dp[i*w+j]=aa[i]===bb[j]?dp[(i+1)*w+j+1]+1:Math.max(dp[(i+1)*w+j],dp[i*w+j+1]);
+  const runs=[];
+  function push(kind,token){const last=runs[runs.length-1];if(last&&last.kind===kind)last.text+=token;else runs.push({kind,text:token})}
+  let i=0,j=0;
+  while(i<n||j<m){
+    if(i<n&&j<m&&aa[i]===bb[j]){push("same",aa[i]);i++;j++}
+    else if(i<n&&(j>=m||dp[(i+1)*w+j]>=dp[i*w+j+1])){push("remove",aa[i]);i++}
+    else{push("add",bb[j]);j++}
+  }
+  return runs.map(x=>x.kind==="same"?e(x.text):x.kind==="remove"?'<del class="diff-remove">'+e(x.text)+'</del>':'<ins class="diff-add">'+e(x.text)+'</ins>').join("");
+}
+function fieldText(value,field){
+  return String(value).replace(field==="input"?/^Вход\s*\n/:field==="output"?/^Выход\s*\n/:/^(?!)$/,"");
+}
 function diff(){
-  const root=document.getElementById("newDiff"),s=MODEL.steps[state.index],base=CHANGE_BASELINE[s.code];if(!root)return;
-  if(!base){root.classList.add("hidden");return}
+  const root=document.getElementById("newDiff"),s=MODEL.steps[state.index],base=CHANGE_BASELINE[s.code];
+  if(!root)return;
+  const oldIndex=OLD_SEQUENCE.indexOf(s.code),moved=oldIndex!==state.index;
+  if(!base&&!moved){root.classList.add("hidden");return}
   root.classList.remove("hidden");
-  const names={title:"Название",input:"Вход",action:"Действие",output:"Выход"};
-  const fields=Object.keys(names).filter(k=>base[k]!==s[k]);
-  root.innerHTML='<summary>Сравнение с исходной схемой · пункты протокола '+(PROTOCOL_CHANGE_IDS[s.code]||[]).join(", ")+'</summary><div class="diff-fields">'+fields.map(k=>'<div class="diff-side"><h4>'+names[k]+' · было</h4><pre>'+e(base[k])+'</pre></div><div class="diff-side after"><h4>'+names[k]+' · проект</h4><pre>'+e(s[k])+'</pre></div>').join("")+'</div><div class="diff-meta"><label>Статус проверки (локально)</label><select id="prStepStatus">'+options(["Требует подтверждения","На проверке","Есть противоречие","Согласовано для публикации","Отклонено"],pr.stepStatuses[s.code]||"Требует подтверждения")+'</select><span>Это не утверждает baseline автоматически.</span></div>';
+  const ids=PROTOCOL_CHANGE_IDS[s.code]||[];
+  const changed=!!base&&["title","input","action","output"].some(k=>base[k]!==s[k]);
+  root.innerHTML='<div class="new-diff-toolbar"><div><strong>Изменения относительно исходной схемы</strong>'+
+    (ids.length?'<div class="new-diff-source">Пункты протокола: '+ids.map(e).join(", ")+'</div>':'<div class="new-diff-source">Изменён порядок отображения блоков</div>')+'</div>'+
+    (changed?'<div class="new-diff-legend"><span><del class="diff-remove">Удалено</del></span><span><ins class="diff-add">Добавлено</ins></span></div><button type="button" class="pr-btn" id="prToggleDiff">'+(diffMode?"Показать чистовой текст":"Показать изменения")+'</button>':'<span class="new-diff-source">Текст блока не изменялся</span>')+
+    '</div>'+
+    (moved?'<p class="new-diff-order">↕ Положение в просмотре: было '+(oldIndex+1)+' из '+MODEL.steps.length+', стало '+(state.index+1)+'. Проверки относятся к выполнению СМР, а не к этапу до его начала.</p>':'')+
+    '<div class="diff-meta"><label for="prStepStatus">Статус проверки изменения</label><select id="prStepStatus">'+options(["Требует подтверждения","На проверке","Есть противоречие","Согласовано для публикации","Отклонено"],pr.stepStatuses[s.code]||"Требует подтверждения")+'</select><span>Рабочий проект, не новая утверждённая версия.</span></div>';
   root.querySelector("#prStepStatus").addEventListener("change",ev=>{pr.stepStatuses[s.code]=ev.target.value;save()});
+  const toggle=root.querySelector("#prToggleDiff");
+  if(toggle)toggle.addEventListener("click",()=>{diffMode=!diffMode;render()});
+  if(!changed||!diffMode)return;
+  if(base.title!==s.title)document.getElementById("questionTitle").innerHTML='Шаг '+e(s.code)+'. '+inlineDiff(base.title,s.title);
+  for(const k of ["input","action","output"]){
+    if(base[k]===s[k])continue;
+    document.getElementById(k).innerHTML='<div class="item new-inline-diff">'+inlineDiff(fieldText(base[k],k),fieldText(s[k],k))+'</div>';
+  }
+  /* A unified diff contains both historical and new text. Quoting is available in the clean version. */
+  document.querySelectorAll(".quote-inline").forEach(b=>{b.disabled=true;b.title="Для цитирования переключись на чистовой текст"});
 }
 function init(){
   const root=document.getElementById("newProtocol");if(!root)return;
@@ -130,11 +170,11 @@ function init(){
   document.getElementById("prExportJson").onclick=exportJson;
   document.getElementById("prImportJson").onclick=()=>document.getElementById("prImportFile").click();
   document.getElementById("prImportFile").addEventListener("change",async ev=>{const file=ev.target.files[0];if(!file)return;try{if(file.size>2000000)throw Error("Файл больше 2 МБ");importJson(JSON.parse(await file.text()))}catch(err){message("Ошибка импорта: "+err.message)}ev.target.value=""});
-  document.getElementById("prChangedLinks").innerHTML=Object.keys(CHANGE_BASELINE).map(c=>'<button type="button" class="pr-step-link" data-pr-step="'+e(c)+'">шаг '+e(c)+'</button>').join(" ");
+  document.getElementById("prChangedLinks").innerHTML=[...new Set([...Object.keys(CHANGE_BASELINE),...MODEL.steps.filter((x,i)=>OLD_SEQUENCE.indexOf(x.code)!==i).map(x=>x.code)])].map(c=>'<button type="button" class="pr-step-link" data-pr-step="'+e(c)+'">шаг '+e(c)+'</button>').join(" ");
   document.getElementById("prChangedLinks").addEventListener("click",ev=>{const b=ev.target.closest("[data-pr-step]");if(b)goStep(b.dataset.prStep)});
   document.getElementById("newViewScheme").onclick=()=>schemeView("scheme");
   document.getElementById("newViewProtocol").onclick=()=>schemeView("protocol");
-  document.querySelectorAll(".node").forEach(x=>{if(CHANGE_BASELINE[x.dataset.code]){x.classList.add("new-modified");x.title="Изменено по протоколу; требует проверки"}});
+  document.querySelectorAll(".node").forEach(x=>{const code=x.dataset.code,old=OLD_SEQUENCE.indexOf(code),now=MODEL.steps.findIndex(s=>s.code===code);if(CHANGE_BASELINE[code])x.classList.add("new-modified");if(old!==now)x.classList.add("new-moved");if(CHANGE_BASELINE[code]||old!==now)x.title=(old!==now?"Перемещён: "+(old+1)+" → "+(now+1)+". ":"")+"Рабочая версия; требует проверки"});
   const oldRender=render;render=function(){oldRender();diff()};
   renderAll();if(state.fio)diff();
   window.prExportXlsx=function(){const a=entries(),rows=[["ID","Разделы","Тип","Формулировка","Статус","Ответственный","Срок","Шаги","Источник / доказательства","Проработка"],...a.map(x=>[x.n||x.uid,x.boxes.join(", ")||"НЕ РАСПРЕДЕЛЕНО",x.kind,x.text,x.status,x.owner,x.deadline,x.steps.join(", "),[x.source,x.evidence].filter(Boolean).join("\n"),x.note])],summary=[["Раздел","Название","Количество записей","Статус обсуждения"],...PROTOCOL_BOXES.map(([c,n])=>[c,n,count(c),pr.boxStatuses[c]||BOX_STATES[0]]),["!","Не распределено / вне структуры",count("unclassified"),"Требует классификации"]];return{rows,summary,date:pr.meeting.date,blob}};
