@@ -79,10 +79,38 @@ function distribute(){
 }
 function summary(){
  const out={all:0,placed:0,missing:0,ambiguous:0,confirmed:0};
- state.docs.forEach(d=>{if(d.category)return;out.all++;const s=status(d);if(["proposed","confirmed"].includes(s))out.placed++;if(s==="missing")out.missing++;if(s==="ambiguous")out.ambiguous++;if(s==="confirmed")out.confirmed++});return out;
+ state.docs.forEach(d=>{if(d.category||!scoped(d))return;out.all++;const s=status(d);if(["proposed","confirmed"].includes(s))out.placed++;if(s==="missing")out.missing++;if(s==="ambiguous")out.ambiguous++;if(s==="confirmed")out.confirmed++});return out;
 }
+
+function workKey(code){const m=String(code||"").match(/^(00|01|02|03)\.(\d{2})(?:\.|$)/);return m?m[1]+"."+m[2]:"";}
+function workKeys(d){const a=[workKey(d.nCode),workKey(d.dCode)].filter(Boolean);if(!a.length){const m=String(d.path||"").match(/\b(?:00|01|02|03)\.\d{2}\b/);if(m)a.push(m[0])}return [...new Set(a.length?a:["other"])];}
+function workIndex(){
+ const ix=new Map();
+ for(const d of state.docs)for(const [code,name] of [[d.nCode,d.nName],[d.dCode,d.dName]]){
+  const key=workKey(code);if(!key)continue;if(!ix.has(key))ix.set(key,{name:key,count:0});
+  if(String(code).trim()===key&&name)ix.get(key).name=String(name).replace(/\s+/g," ").trim();
+ }
+ for(const d of state.docs)if(!d.category)for(const key of workKeys(d)){if(!ix.has(key))ix.set(key,{name:key==="other"?"Без категории":key,count:0});ix.get(key).count++;}
+ return ix;
+}
+function workLabel(key){return workIndex().get(key)?.name||key;}
+function workName(d){return workKeys(d).map(key=>key+" · "+workLabel(key)).join(" / ")}
+function workBadges(d){return workKeys(d).map(key=>'<span class="work-kind-chip" title="'+esc(key+" · "+workLabel(key))+'">'+esc(workLabel(key))+'</span>').join("")}
+function fillWorkFilter(){
+ const sel=el("workFilter");if(!sel)return;
+ const prev=sel.value,idx=workIndex(),groups=[["00","Общая документация"],["01","Общестроительные работы"],["02","Механомонтажные работы"],["03","Специальные работы"],["other","Другие"]];
+ let content='<option value="">Все виды работ и общие документы</option>';
+ for(const [prefix,label] of groups){
+  const options=[...idx.entries()].filter(([k,v])=>v.count>0&&(prefix==="other"?k==="other":k.startsWith(prefix+"."))).sort((a,b)=>a[0].localeCompare(b[0],"ru"));
+  if(options.length)content+='<optgroup label="'+esc(label)+'">'+options.map(([k,v])=>'<option value="'+esc(k)+'">'+esc(k+" · "+v.name.slice(0,78)+" ("+v.count+")")+'</option>').join("")+'</optgroup>';
+ }
+ sel.innerHTML=content;sel.value=idx.has(prev)?prev:"";
+ const hint=el("workFilterInfo");if(hint)hint.textContent=sel.value?"Выбран вид работ: "+sel.value+" · "+workLabel(sel.value):"Фильтр применяется к документам и схеме одновременно";
+}
+
 function matchesFilters(d){
  const query=norm(el("search").value),source=el("sourceFilter").value,st=el("statusFilter").value,x=edited(d);
+ const work=el("workFilter").value;if(work&&!workKeys(d).includes(work))return false;
  if(query&&!norm([d.nCode,d.nName,d.dCode,d.dName,d.comparison,d.comment,d.path].join(" ")).includes(query))return false;
  if(source==="НКНХ"&&!hasN(d)||source==="ДГП"&&!hasD(d))return false;
  if(st&&status(d)!==st)return false;
@@ -149,10 +177,7 @@ function showTagDefinition(key,anchor){
  p.style.top=Math.max(12,Math.min(window.innerHeight-160,r.bottom+9))+"px";
  p.classList.add("open");
 }
-function scoped(d){
- const v=el("uniqueFilter").value,u=unique(d);
- return !v||v==="union"||v==="both"&&u==="both"||v==="n"&&u==="n"||v==="d"&&u==="d"||v==="different"&&u==="both"&&/(различи|не совпада|отлича)/i.test(d.comparison);
-}
+function scoped(d){return matchesFilters(d)}
 function mappedDocs(){
  const by=Object.fromEntries(steps.map(s=>[s.code,[]]));
  if(state.distributed)for(const d of state.docs){if(d.category||!scoped(d))continue;const e=edited(d);if(e.step&&by[e.step]&&!e.excluded)by[e.step].push(d);}
@@ -260,6 +285,7 @@ function jumpDoc(id){
 }
 
 function render(){
+ fillWorkFilter();
  const z=summary();for(const k of ["All","Placed","Missing","Ambiguous","Confirmed"])el("count"+k).textContent=z[k.toLowerCase()];
  const n=state.docs.filter(d=>unique(d)==="n").length,d=state.docs.filter(d=>unique(d)==="d").length,comments=state.docs.filter(x=>x.comment).length;
  el("bannerText").textContent=state.scope==="demo"?"Демо-данные: 40 пар актов. Чтобы увидеть уникальные позиции и вопросы, загрузи XLSM v6 (Лист1).":
@@ -434,6 +460,7 @@ document.querySelectorAll("[data-venn]").forEach(button=>button.addEventListener
  el("sourceFilter").addEventListener("change",renderDocs);
 el("statusFilter").addEventListener("change",renderDocs);
 el("uniqueFilter").addEventListener("change",render);
+el("workFilter").addEventListener("change",()=>{state.focus=null;render()});
 el("questionFilter").addEventListener("change",renderDocs);
 document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
 const k=button.dataset.filter;state.tagFilters=state.tagFilters.includes(k)?state.tagFilters.filter(x=>x!==k):[...state.tagFilters,k];render();
