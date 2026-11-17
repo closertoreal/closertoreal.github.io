@@ -75,7 +75,7 @@ main{max-width:1700px;margin:auto;padding:22px 20px 60px}.eyebrow{text-transform
 .pair-popover-question p{white-space:pre-wrap;line-height:1.6;margin:0}
 .pair-popover-footer{border-top:1px solid #e2e8eb;color:#71848f;margin-top:12px;padding-top:8px;font-size:10px}
 @media(max-width:600px){.paired-cols{grid-template-columns:1fr}.pair-popover-sides{grid-template-columns:1fr}.pair-details{white-space:normal}.pair-row .doc-bottom{flex-wrap:wrap}}
-</style>
+.filters .inline-filters .field{flex:1;min-width:125px}.site-tabs{gap:3px;align-items:center}.site-tabs a{font-size:11px}</style>
 </head>
 <body>
 <header class="site-top">
@@ -112,7 +112,7 @@ main{max-width:1700px;margin:auto;padding:22px 20px 60px}.eyebrow{text-transform
       <div class="inline-filters">
         <select id="sourceFilter" class="field source" aria-label="Источник"><option value="">Обе площадки</option><option value="НКНХ">НКНХ</option><option value="ДГП">ДГП</option></select>
         <select id="statusFilter" class="field status" aria-label="Статус сопоставления"><option value="">Все статусы</option><option value="proposed">Предложено</option><option value="confirmed">Подтверждено</option><option value="missing">Без шага</option><option value="ambiguous">Несколько шагов</option><option value="outside">Вне рассматриваемого процесса</option><option value="pending">Не распределено</option></select>
-      </div>
+      <select id="uniqueFilter" class="field" aria-label="Наличие в перечнях"><option value="">Оба и уникальные</option><option value="n">Только НКНХ</option><option value="d">Только ДГП</option><option value="both">В обоих перечнях</option><option value="different">Разные формулировки</option></select><select id="questionFilter" class="field" aria-label="Вопросы"><option value="">Все комментарии</option><option value="has">С вопросами</option><option value="none">Без вопросов</option></select></div>
       <div class="inline-filters" aria-label="Фильтр по функциям ИД">
         <button type="button" class="filter-tag" data-filter="done" data-flag="done">done</button>
         <button type="button" class="filter-tag" data-filter="quality" data-flag="quality">quality</button>
