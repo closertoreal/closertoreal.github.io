@@ -225,6 +225,26 @@ html body .diagram .node.has-content-change.current::after{content:"РАССМА
   color:#22695f;background:#ebf7f3;font-size:12px;font-weight:800;
 }
 .change-icon-legend{display:inline-block;margin-top:4px;color:#43655e;font-size:10px;font-weight:650;white-space:normal}
+
+/* Пурпурные метки отделяют три закрытых пункта МЕМО от обычных правок ✎. */
+.diagram{position:relative;padding-left:23px;padding-right:23px}
+.diagram .node.memo-closed{border-color:#8f69c9;box-shadow:0 0 0 2px #e2d5f2}
+.diagram .node.memo-closed.current{box-shadow:0 0 0 5px #ded0f6}
+.diagram .memo-chips{display:flex!important;flex-wrap:wrap;gap:3px;margin-top:5px}
+.diagram .memo-chip{display:inline-flex!important;width:auto;padding:3px 5px;border:1px solid #b497d9;background:#f1e9fc;color:#68409c;border-radius:5px;font-size:10px;font-weight:850;line-height:1.1}
+.memo-legend{color:#68409c;font-weight:800}
+.memo-edges{position:absolute;top:0;left:0;z-index:2;overflow:visible;pointer-events:none}
+.memo-catalog{padding:9px;margin:9px 0;border:2px dashed #bda9d9;background:#faf8fd;border-radius:8px}
+.memo-catalog>summary{cursor:pointer;color:#673c9d;font-size:11px;font-weight:850}
+.memo-catalog>p{font-size:10px;color:#666275;line-height:1.5;margin:7px 0}
+.memo-catalog-group{padding:6px 0;border-top:1px solid #e0d6ec}
+.memo-catalog-group>summary{cursor:pointer;font-size:11px;color:#534469;font-weight:740}
+.memo-catalog-group ul{padding-left:16px}
+.memo-catalog-group li{margin:6px 0;color:#3f4961;font-size:11px}
+.memo-catalog-group li small{display:block;color:#7e7391;font-size:9px}
+.memo-pipe,.memo-pipe-action{padding:9px 8px;margin:10px 0;border-left:3px solid #8b61c4;background:#f8f4fd;border-radius:6px}
+.memo-pipe h4,.memo-pipe-action h4{margin:0 0 7px;color:#6c46a6;font-size:11px;font-weight:850}
+.memo-focused{outline:3px solid #c9b2ee!important;outline-offset:2px}
 </style>
 <link rel="stylesheet" href="./review-new.css?v=202611171837">
 </head>
@@ -622,6 +642,108 @@ for(const widget of WIDGETS){
   const button=widget.querySelector("[data-release-check]");
   if(button)button.addEventListener("click",()=>check(widget));
 }
+})();
+</script>
+
+
+<script>
+/* МЕМО 10/25/29 - обратные связи, документы по ПСД, трубопроводные операции. */
+(function(){
+"use strict";
+const catalog=[["Общие акты","01.03.04.01.01","01.03.04.01.01","Акт освидетельствования скрытых работ (АОСР, пример для бетонных работ)"],["Общие акты","02.01.01.04","02.01.01.04","Акт освидетельствования ответственных строительных конструкций (АОСК)"],["Общие акты","01.11.01.04.06","01.12.01.06.09","Акт освидетельствования участков сетей инженерно-технического обеспечения (АОУСИТО)"],["Общие акты","01.14.02.03","01.14.02.03","Акт промежуточной приёмки ответственных конструкций"],["Земляные и свайные","01.01.06.02","01.01.05.02","Акт приёмки оснований"],["Земляные и свайные","01.02.02.02.02","01.02.02.01.01","Акт освидетельствования и приёмки скважины сваи"],["Земляные и свайные","01.02.02.02.04","01.02.02.02.03","Акт освидетельствования и приёмки сваи"],["Отделочные работы","01.06.01.02","01.06.01.02","Акт приёмки выполненных работ по перегородкам и стенам"],["Отделочные работы","01.06.02.02","01.06.02.02","Акт приёмки выполненных работ по устройству полов"],["Отделочные работы","01.06.03.02","01.06.03.02","Акт приёмки выполненных работ по устройству потолков"],["Инженерные системы","01.11.01.04.11","01.11.01.04.11","Акт приёмки внутренних систем хозяйственного и горячего водоснабжения"],["Инженерные системы","01.11.01.04.12","01.11.01.04.12","Акт приёмки системы и выпусков внутренней канализации"],["Инженерные системы","01.11.01.04.13","01.11.01.04.13","Акт приёмки системы и выпусков водостока здания"],["Инженерные системы","01.11.01.04.14","01.11.01.04.14","Акт приёмки защитного покрытия тепловых сетей"],["Инженерные системы","01.11.01.04.08","01.11.01.04.08","Акт технической готовности систем отопления (посистемно)"],["Наружные сети и трубопроводы","01.13.05.02","01.13.05.02","Акт приёмки трубопровода владельцем от монтажной организации"],["Наружные сети и трубопроводы","01.14.04.05","01.14.04.05","Акт приёмки перехода газопровода, выполненного способом наклонно-направленного бурения"],["Наружные сети и трубопроводы","01.12.01.06.01","01.12.01.06.01","Акт приёмочного гидравлического/пневматического испытания напорного трубопровода"],["Наружные сети и трубопроводы","01.12.01.06.02","01.12.01.06.02","Акт приёмочного гидравлического испытания безнапорного трубопровода"],["Металлоконструкции и защитные покрытия","02.01.01.04","02.01.01.04","Акт освидетельствования строительных/ответственных металлоконструкций"],["Металлоконструкции и защитные покрытия","02.01.01.05","02.01.01.05","Акт освидетельствования подкрановых балок и рельсов"],["Металлоконструкции и защитные покрытия","02.02.02.08","02.05.03.01","Акт приёмки защитного покрытия"],["Металлоконструкции и защитные покрытия","02.05.05.01","02.05.05.01","Акт приёмки выполненных изоляционных работ"],["Резервуары","02.04.01.02.02.01.02.01","02.04.01.02.02.01.02.01","Акт на приёмку основания и фундаментов резервуара под монтаж"],["Резервуары","02.04.01.02.02.01.02.02","02.04.01.02.02.01.02.02","Акт приёмки металлоконструкций резервуара для сборки"],["Резервуары","02.04.01.02.02.01.06.03","02.04.01.02.02.01.06.03","Акт на приёмку резервуара"],["Крановые пути","02.06.01.01.01","02.06.01.01.01","Акт промежуточной приёмки ответственных конструкций (балок кранового пути)"],["Крановые пути","02.06.01.02.02","02.06.01.02.02","Акт приёмки кранового пути под монтаж крана"],["Крановые пути","02.06.01.03.06","02.06.01.03.06","Акт сдачи-приёмки заземления кранового пути"],["Крановые пути","02.06.02.01.01","02.06.02.01.01","Акт сдачи-приёмки земляного полотна под устройство кранового пути"],["Электромонтажные работы","03.01.01.02.03","03.01.01.02.03","Акт приёмки траншей, каналов, туннелей и блоков под монтаж кабелей"],["Электромонтажные работы","03.02.01.03.01","03.02.01.03.01","Акт приёмки электромонтажных работ"],["Электромонтажные работы","03.02.02.03.01","03.02.02.03.01","Акт сдачи-приёмки электромонтажных работ"],["Электромонтажные работы","03.02.04.03.01","03.02.04.03.01","Акт приёмки и сдачи электромонтажных работ"],["Специальные защитные системы","03.02.01.01.03","03.02.01.01.03","Акт приёмки контактных устройств, электроперемычек, опорных и контрольных пунктов"],["Специальные защитные системы","03.02.01.01.04","03.02.01.01.04","Акт приёмки установленных электроизолирующих соединений"],["Специальные защитные системы","03.02.04.01.04","03.02.04.01.04","Акт приёмки строительно-монтажных работ гальванической (протекторной) защиты"],["Специальные защитные системы","03.02.03.03.01","03.02.03.03.01","Акт освидетельствования электромонтажных работ по устройствам электрохимической защиты"],["Специальные работы","02.06.03.03.02","02.06.03.03.02","Акт приёмки лифта"],["Специальные работы","02.06.03.03.13","02.06.03.03.13","Акт технического освидетельствования лифта"]];
+const memoMap={"12":[10],"13":[10],"16":[10],"18":[25,29],"21":[29]};
+const query=new URLSearchParams(location.search),requested=query.get("step"),focus=query.get("memo");
+const diagram=document.getElementById("diagram");if(!diagram)return;
+const ns="http://www.w3.org/2000/svg";
+for(const [code,nums] of Object.entries(memoMap)){
+ const b=diagram.querySelector('.node[data-code="'+code+'"]');if(!b)continue;
+ b.classList.add("memo-closed");b.setAttribute("data-memo",nums.join(","));
+ if(!b.querySelector(".memo-chips")){
+  const parent=document.createElement("span");parent.className="memo-chips";
+  nums.forEach(n=>{const chip=document.createElement("span");chip.className="memo-chip";chip.textContent="М"+n;chip.title="Пункт "+n+" МЕМО - доработан";parent.append(chip);});
+  b.append(parent);
+ }
+}
+const legend=document.querySelector(".change-icon-legend");
+if(legend&&!legend.querySelector(".memo-legend")){const l=document.createElement("span");l.className="memo-legend";l.textContent=" · М10, М25, М29 = три закрытых пункта МЕМО";legend.append(l);}
+let svg=diagram.querySelector(".memo-edges");
+if(!svg){
+ svg=document.createElementNS(ns,"svg");svg.setAttribute("class","memo-edges");svg.setAttribute("aria-label","Петли возврата к устранению замечаний");svg.style.pointerEvents="none";
+ svg.innerHTML='<defs><marker id="memo-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#8355bb"></path></marker></defs>';
+ diagram.append(svg);
+}
+function draw(){
+ const b=diagram.getBoundingClientRect(),w=diagram.scrollWidth,h=diagram.scrollHeight;if(w<50||h<50)return;
+ svg.setAttribute("width",w);svg.setAttribute("height",h);svg.setAttribute("viewBox","0 0 "+w+" "+h);
+ svg.querySelectorAll(".memo-arrow-path").forEach(x=>x.remove());
+ [["12","16","right",0],["13","16","right",1],["18","16","left",0]].forEach(([from,to,side,index])=>{
+  const a=diagram.querySelector('.node[data-code="'+from+'"]'),z=diagram.querySelector('.node[data-code="'+to+'"]');if(!a||!z)return;
+  const ar=a.getBoundingClientRect(),zr=z.getBoundingClientRect(),right=side==="right";
+  const x1=(right?ar.right:ar.left)-b.left,y1=ar.top-b.top+ar.height/2;
+  const x2=(right?zr.right:zr.left)-b.left,y2=zr.top-b.top+zr.height/2;
+  const lane=right?Math.min(w-7,Math.max(x1,x2)+18+index*10):Math.max(7,Math.min(x1,x2)-20);
+  const path=document.createElementNS(ns,"path");path.setAttribute("class","memo-arrow-path");
+  path.setAttribute("d","M"+x1+","+y1+" H"+lane+" V"+y2+" H"+x2);
+  path.setAttribute("stroke","#8355bb");path.setAttribute("stroke-width","2.5");path.setAttribute("fill","none");path.setAttribute("stroke-dasharray","7 4");path.setAttribute("marker-end","url(#memo-arrow)");
+  const title=document.createElementNS(ns,"title");title.textContent=from==="18"?"МЕМО 21: отрицательная приёмка → устранение → повторная инспекция":"МЕМО 10: замечания при контроле → устранение на СМР → повторная проверка";path.append(title);
+  svg.append(path);
+ });
+}
+function updateSvg(){requestAnimationFrame(draw);}
+window.addEventListener("resize",updateSvg);
+if("ResizeObserver" in window)new ResizeObserver(updateSvg).observe(diagram);
+updateSvg();
+function actCatalog(){
+ const details=document.createElement("details");details.id="memo-25";details.className="memo-catalog";details.open=focus==="25";
+ const title=document.createElement("summary");title.textContent="М25 · Акты приёмки по видам работ (ПСД)";details.append(title);
+ const intro=document.createElement("p");intro.textContent="Сверено по Приложению 1 (НКНХ) и Приложению 13.1 (ДГП). Коды указаны по каждому перечню; применимость зависит от вида работ и стадии. Это перечень разновидностей актов, а не обязательный комплект для каждого объёма. Акты готовности к монтажу и итоговая приёмка объекта относятся к другим этапам.";details.append(intro);
+ const groups=new Map();for(const [area,nk,dp,name] of catalog){if(!groups.has(area))groups.set(area,[]);groups.get(area).push([nk,dp,name]);}
+ for(const [area,items] of groups){
+  const block=document.createElement("details");block.className="memo-catalog-group";
+  const h=document.createElement("summary");h.textContent=area+" ("+items.length+")";block.append(h);
+  const list=document.createElement("ul");
+  for(const [nk,dp,name] of items){
+   const li=document.createElement("li"),t=document.createElement("span"),s=document.createElement("small");
+   t.textContent=name;s.textContent="НКНХ: "+nk+"; ДГП: "+dp;li.append(t,s);list.append(li);
+  }
+  block.append(list);details.append(block);
+ }
+ return details;
+}
+function decorate(){
+ const st=MODEL.steps[state.index];if(!st||st.code!=="18")return;
+ if(document.documentElement.classList.contains("new-diff-active"))return;
+ const output=document.getElementById("output"),action=document.getElementById("action");if(!output||!action)return;
+ if(!output.querySelector("#memo-25"))output.append(actCatalog());
+ const items=[...output.querySelectorAll(":scope > .item[data-item-index]")],pipe=items.filter(x=>[3,4,5,6,7].includes(Number(x.dataset.itemIndex)));
+ if(pipe.length===5&&!output.querySelector("#memo-29")){
+  const box=document.createElement("section");box.id="memo-29";box.className="memo-pipe";
+  const title=document.createElement("h4");title.textContent="М29 · Для трубопроводов";box.append(title);
+  output.insertBefore(box,pipe[0]);pipe.forEach(x=>box.append(x));
+  if(focus==="29")box.classList.add("memo-focused");
+ }
+ if(!action.querySelector(".memo-pipe-action")){
+  const lines=st.action.split("\n"),special=lines.filter(x=>/^18\.[23]\. /.test(x));
+  if(special.length===2){
+   const intro=lines.filter(x=>/^18\.1\. /.test(x)),rest=lines.filter(x=>!/^18\.[123]\. /.test(x));
+   action.textContent="";
+   const first=document.createElement("div");first.className="item";first.textContent=intro.join("\n");action.append(first);
+   const box=document.createElement("section");box.className="memo-pipe-action";
+   const h=document.createElement("h4");h.textContent="М29 · Для трубопроводов";box.append(h);
+   const inner=document.createElement("div");inner.className="item";inner.textContent=special.join("\n");box.append(inner);action.append(box);
+   const last=document.createElement("div");last.className="item";last.textContent=rest.join("\n");action.append(last);
+  }
+ }
+}
+const beforeRender=render;render=function(){beforeRender();decorate();};
+decorate();
+function goLinked(){
+ if(!requested)return;const i=MODEL.steps.findIndex(x=>x.code===requested);if(i<0)return;
+ go(i);decorate();
+ if(focus==="25"){const d=document.getElementById("memo-25");if(d)d.open=true;}
+ const b=diagram.querySelector('.node[data-code="'+requested+'"]');if(b)b.classList.add("memo-focused");
+}
+if(requested){if(state.fio)goLinked();else document.getElementById("start").addEventListener("submit",()=>setTimeout(goLinked,60),{once:true});}
 })();
 </script>
 
