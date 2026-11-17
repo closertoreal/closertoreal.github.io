@@ -199,7 +199,7 @@ function initCompact(){
   renderCompact();
 }
 /* Unified inline diff: the old text remains in place; deletions and insertions are marked in one reading flow. */
-let diffMode=true;
+let diffMode=false; /* Чистовой просмотр по умолчанию. */
 function diffTokens(t){return String(t).match(/[^\s]+[ \t]*|\r?\n|[ \t]+/g)||[]}
 function inlineDiff(before,after){
   if(before===after)return e(after);
