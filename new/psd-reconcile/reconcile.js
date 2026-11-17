@@ -233,10 +233,10 @@ function cell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
 function exportCsv(kind){
  const head=kind==="questions"?["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Статус","Шаг","Вопрос для уточнения"]:
  ["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Путь","Категория","Шаг","Статус","Основание","done","quality","them","next"];
- const list=kind==="questions"?state.docs.filter(d=>!d.category&&["missing","ambiguous"].includes(status(d))):state.docs;
+ const list=kind==="questions"?state.docs.filter(d=>!!d.comment||(!d.category&&["missing","ambiguous"].includes(status(d)))):state.docs;
  const rows=[head,...list.map(d=>{const x=edited(d),f=x.flags||{};
  const start=[d.row,d.nCode,d.nName,d.dCode,d.dName,d.comparison,d.comment];
- return kind==="questions"?[...start,statusName(status(d)),x.step||"","Где в процессе оформляется этот документ, и применим ли он к данному виду работ?"]:
+ return kind==="questions"?[...start,statusName(status(d)),x.step||"",(d.comment||"Где в процессе оформляется этот документ, и применим ли он к данному виду работ?")]:
  [...start,d.path,d.category?"Категория":"Документ",x.step||"",statusName(status(d)),x.reason||"",...keys.map(k=>f[k]===1?k:f[k]===0?"нет":"не оценено")];
  })];
  const content="\uFEFF"+rows.map(r=>r.map(cell).join(";")).join("\r\n");
