@@ -130,8 +130,9 @@ function renderDocs(){
  const filtered=state.docs.filter(matchesFilters),groups=new Map();filtered.forEach(d=>{let g=groupOf(d);if(!groups.has(g))groups.set(g,[]);groups.get(g).push(d)});
  let markup="";
  for(const [name,docs] of groups){
-  const cap=state.visible[name]||70;
-  markup+='<details class="group"'+(groups.size<5||!!el("search").value?" open":"")+'><summary><span>'+esc(name)+'</span><small>'+docs.length+' строк</small></summary><div class="group-content">'+docs.slice(0,cap).map(pairHtml).join("")+
+  const selectedPos=docs.findIndex(d=>d.id===state.selected);
+  const cap=Math.max(state.visible[name]||70,selectedPos<0?0:selectedPos+1);
+  markup+='<details class="group"'+(groups.size<5||!!el("search").value||selectedPos>=0?" open":"")+'><summary><span>'+esc(name)+'</span><small>'+docs.length+' строк</small></summary><div class="group-content">'+docs.slice(0,cap).map(pairHtml).join("")+
   (docs.length>cap?'<button class="btn smol show-more" type="button" data-more="'+esc(name)+'">Показать ещё ('+(docs.length-cap)+' осталось)</button>':"")+'</div></details>';
  }
  el("docs").innerHTML=markup||'<div class="empty">По этим фильтрам строк нет</div>';
@@ -251,8 +252,8 @@ function jumpDoc(id){
  const doc=state.docs.find(d=>d.id===id);if(!doc)return;
  closeStepModal();state.selected=id;state.focus=null;
  // The record may be hidden by the current filter; reset only presentation filters.
- el("search").value=doc.nCode||doc.dCode||doc.nName;
- el("statusFilter").value="";el("questionFilter").value="";el("uniqueFilter").value="union";
+ el("search").value=doc.nName||doc.dName||doc.nCode||doc.dCode;
+ el("statusFilter").value="";el("sourceFilter").value="";el("questionFilter").value="";el("uniqueFilter").value="union";
  render();
  const record=el("docs").querySelector('[data-record="'+CSS.escape(id)+'"]');
  if(record)record.scrollIntoView({behavior:"smooth",block:"center"});
