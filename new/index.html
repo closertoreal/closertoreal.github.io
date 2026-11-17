@@ -196,14 +196,15 @@ html:not(.protocol-enabled) #newViewProtocol,html:not(.protocol-enabled) #newDif
 html:not(.protocol-enabled) .new-modified:after,html:not(.protocol-enabled) .new-moved:after {display:none!important}
 html:not(.protocol-enabled) .step-panel {flex:1 1 auto!important;min-height:0!important}
 .feedback-note{margin:9px 0;padding:8px 12px;border-left:3px solid #cba45f;background:#faf7ee;border-radius:4px;color:#5a533c;font-size:11px;line-height:1.5}
+.release-stamp{display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:11px;line-height:1.3;padding:5px 9px;border:1px solid #cbdcde;border-radius:6px;background:#f4faf9;color:#385660;white-space:normal}.release-stamp b{color:#175e69;font-weight:800}@media(max-width:720px){.release-stamp{font-size:10px;padding:4px 6px}}
 </style>
-<link rel="stylesheet" href="./protocol.css?v=4">
+<link rel="stylesheet" href="./protocol.css?v=v202611171603">
 <script>document.documentElement.classList.toggle("protocol-enabled",new URLSearchParams(location.search).get("protocol")==="1");</script>
 </head>
 <body>
-<form id="start" class="start"><h1>СИД · NEW: схема СМР и протокол</h1><p>Рабочая версия схемы по протоколу: 35 шагов, подсветка изменений и отдельный раздел с 63 пунктами протокола по структуре Confluence. Изменения ещё требуют проверки и согласования. Данные сохраняются в этом браузере.</p><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
+<form id="start" class="start"><h1>СИД · NEW: схема СМР и протокол</h1><p>Рабочая версия схемы по протоколу: 35 шагов, подсветка изменений и отдельный раздел с 63 пунктами протокола по структуре Confluence. Изменения ещё требуют проверки и согласования. Данные сохраняются в этом браузере.</p><p class="release-stamp"><b>v2026.11.17.1603</b> · GitHub 17.11.2026 16:03 МСК</p><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
 <main id="work" class="work hidden">
-  <header class="topbar"><div class="brand">СИД · NEW</div><span class="new-release"><b>Рабочая версия</b> По протоколу</span><span id="who" class="small"></span><nav class="new-tabs" aria-label="Разделы страницы"><button type="button" id="newViewScheme" class="active">Схема СМР</button><button type="button" id="newViewProtocol">Протокол · 63 пункта</button></nav><div class="spacer"></div><button id="download" class="primary">Схема XLSX</button></header>
+  <header class="topbar"><span class="release-stamp" role="status" aria-label="Версия сайта и время публикации в GitHub"><b>v2026.11.17.1603</b> · GitHub 17.11.2026 16:03 МСК</span><div class="brand">СИД · NEW</div><span class="new-release"><b>Рабочая версия</b> По протоколу</span><span id="who" class="small"></span><nav class="new-tabs" aria-label="Разделы страницы"><button type="button" id="newViewScheme" class="active">Схема СМР</button><button type="button" id="newViewProtocol">Протокол · 63 пункта</button></nav><div class="spacer"></div><button id="download" class="primary">Схема XLSX</button></header>
   <div class="workspace">
     <section class="panel diagram-panel" aria-labelledby="diagramHeading">
       <header class="panel-head"><div class="panel-caption"><span class="panel-index">01</span><div><h2 id="diagramHeading">Схема процесса</h2><span>Выберите шаг для проверки</span></div></div></header>
@@ -516,6 +517,6 @@ function downloadXlsx(){
 load();if(state.fio)el('fio').value=state.fio;buildLegend();buildDiagram();
 </script>
 <script src="./protocol-data.js"></script>
-<script src="./protocol-ui.js?v=4"></script>
+<script src="./protocol-ui.js?v=v202611171603"></script>
 <script src="./protocol-export.js"></script>
 </body></html>
