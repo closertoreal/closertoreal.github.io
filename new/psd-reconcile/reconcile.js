@@ -377,15 +377,39 @@ function exportCsv(kind){
  message("CSV выгружен: "+list.length+" строк. Исходные вопросы и оба названия сохранены.");
 }
 function fly(){
- if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
- const targets=state.docs.filter(d=>edited(d).step&&!d.category).slice(0,7),area=el("docs").getBoundingClientRect();
- targets.forEach((d,i)=>setTimeout(()=>{
-  const target=el("diagram").querySelector('[data-step="'+edited(d).step+'"]');if(!target)return;
-  const to=target.getBoundingClientRect(),ghost=document.createElement("span");
-  ghost.className="fly";ghost.textContent=(d.nName||d.dName).slice(0,42);ghost.style.left=area.left+25+"px";ghost.style.top=area.top+35+i*12+"px";document.body.append(ghost);
-  const dx=to.left-area.left+35,dy=to.top-area.top-35-i*12;
-  ghost.animate([{opacity:0,transform:"scale(.75)"},{opacity:1,offset:.12},{opacity:.95,transform:"translate("+dx+"px,"+dy+"px) scale(.83)",offset:.9},{opacity:0,transform:"translate("+dx+"px,"+dy+"px) scale(.62)"}],{duration:850,easing:"ease-in-out",fill:"forwards"}).onfinish=()=>{ghost.remove();target.classList.add("node-target");setTimeout(()=>target.classList.remove("node-target"),1000)};
- },100*i));
+ const groups=Object.entries(mappedDocs()).filter(([,records])=>records.length);
+ const area=el("docs").getBoundingClientRect();
+ if(!groups.length){message("Не найдено назначений: проверь документы без шага.");return;}
+ if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+   message("Распределение завершено: "+groups.length+" шагов получили документы. Анимация отключена настройками системы.");return;
+ }
+ groups.forEach(([code,rows],i)=>setTimeout(()=>{
+  const target=el("diagram").querySelector('[data-step="'+code+'"]');if(!target)return;
+  const to=target.getBoundingClientRect(),f=document.createElement("div");
+  const flags=keys.filter(k=>rows.some(d=>effectiveFlags(d)[k]===1));
+  f.className="fly group-fly";
+  f.innerHTML='<strong>'+rows.length+' док.</strong>'+
+    '<span>'+flags.map(k=>'<i class="fly-flag fly-'+k+'">'+k+'</i>').join("")+'</span>';
+  const sx=Math.max(12,Math.min(window.innerWidth-185,area.left+20)),sy=Math.max(20,Math.min(window.innerHeight-38,area.top+35+i%3*21));
+  f.style.left=sx+"px";f.style.top=sy+"px";
+  document.body.append(f);
+  const destX=Math.max(15,Math.min(window.innerWidth-185,to.left+Math.min(to.width/2,50))),
+        destY=Math.max(12,Math.min(window.innerHeight-55,to.top+Math.min(to.height/2,35)));
+  const dx=destX-sx,dy=destY-sy;
+  if(typeof f.animate!=="function"){f.remove();return;}
+  const animation=f.animate([
+   {opacity:0,transform:"translate(0,0) scale(.7)"},
+   {opacity:1,transform:"translate(10px,0) scale(1)",offset:.15},
+   {opacity:1,transform:"translate("+dx+"px,"+dy+"px) scale(.85)",offset:.86},
+   {opacity:0,transform:"translate("+dx+"px,"+dy+"px) scale(.65)"}
+  ],{duration:810,easing:"cubic-bezier(.29,.68,.31,1)",fill:"forwards"});
+  animation.onfinish=()=>{
+    f.remove();
+    if(target.isConnected){target.classList.add("node-target");setTimeout(()=>target.classList.remove("node-target"),1000);}
+  };
+ },Math.min(i,23)*80));
+ message("Распределены "+state.docs.filter(d=>!d.category&&edited(d).step).length+
+ " документа по "+groups.length+" шагам; цветные метки на шагах показывают, какие функции подтверждают связанные документы.");
 }
 el("docs").addEventListener("click",event=>{
  const more=event.target.closest("[data-more]");if(more){state.visible[more.dataset.more]=(state.visible[more.dataset.more]||70)+70;renderDocs();return;}
