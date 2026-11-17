@@ -113,7 +113,7 @@ function pairHtml(d){
  '<span class="pair-link-indicator">'+(e.step?'↗ Связано со шагом '+esc(e.step):'◇ Шаг не определён')+
  (e.autoConfidence==='low'?' · низкая уверенность':e.autoConfidence==='medium'?' · гипотеза':'')+'</span></div>';
  const controls=d.category?'<span class="note-status">Строка иерархии: не распределяется как документ</span>':
- '<select class="field pair-step-select" aria-label="Шаг сопоставления" data-step-assign="'+esc(d.id)+'">'+options().replace('<option value="'+esc(e.step||'')+'">','<option value="'+esc(e.step||'')+'" selected>')+'</select>'+
+ '<button type="button" class="btn smol pick-step" data-pick-step="'+esc(d.id)+'">Шаг '+esc(e.step||"не определён")+' · изменить</button>'+
  '<button type="button" class="btn smol" data-confirm="'+esc(d.id)+'"'+(!e.step?" disabled":"")+'>✓</button>'+
  '<button type="button" class="btn smol" data-outside="'+esc(d.id)+'">'+(e.excluded?"Вернуть":"Вне")+'</button>';
  return '<article class="doc-row pair-row '+(un==="n"?"unique-n":un==="d"?"unique-d":"")+(state.selected===d.id?" selected":"")+'" data-record="'+esc(d.id)+'">'+
@@ -136,8 +136,7 @@ function renderDocs(){
  }
  el("docs").innerHTML=markup||'<div class="empty">По этим фильтрам строк нет</div>';
  el("filterCount").textContent="Показано по фильтрам: "+filtered.length+" / "+state.docs.length+" строк; категорий "+state.docs.filter(x=>x.category).length+".";
- // For each row, select the assigned step after HTML injection, avoiding regex substitutions.
- el("docs").querySelectorAll(".pair-step-select").forEach(x=>{const id=x.dataset.stepAssign,d=state.docs.find(z=>z.id===id);if(d)x.value=edited(d).step||""});
+ // В каждом блоке нет громоздкого списка из 35 шагов: назначение редактируется в поповере.
 }
 
 function showTagDefinition(key,anchor){
@@ -282,6 +281,7 @@ function showDetails(d,anchor){
  '<div class="pair-popover-diff"><strong>Результат сравнения</strong><p>'+esc(d.comparison||"Не отмечено")+'</p></div>'+
  '<div class="pair-popover-question"><strong>Твой комментарий / вопрос</strong><p>'+esc(d.comment||"Комментария нет")+'</p></div>'+
 
+ '<div class="pair-step-editor"><label>Связанный шаг схемы <select class="field" data-pick-step-select>'+options()+'</select></label></div>'+
  '<div class="pair-editor"><strong>Юридические функции ИД · предварительная оценка</strong><p>'+esc(edited(d).autoFlagsReason||"Назначение требует проверки")+'</p>'+
  '<div class="pair-edit-grid">'+keys.map(key=>{
   const manual=edited(d).flags||{},v=Object.prototype.hasOwnProperty.call(manual,key)?(manual[key]===1?"1":manual[key]===0?"0":"?"):"auto";
@@ -292,6 +292,7 @@ function showDetails(d,anchor){
 
  '<div class="pair-popover-footer">Исходная формулировка сохранена. Распределение по шагам: '+esc(statusName(status(d)))+(edited(d).step?" · шаг "+esc(edited(d).step):"")+'.</div>';
  p.dataset.recordId=d.id;
+ p.querySelector("[data-pick-step-select]").value=edited(d).step||"";
  p.hidden=false;const r=anchor.getBoundingClientRect();
  p.style.width=Math.min(440,window.innerWidth-24)+"px";p.style.left=Math.max(12,Math.min(r.left,window.innerWidth-p.offsetWidth-12))+"px";
  let top=r.bottom+9;if(top+p.offsetHeight>window.innerHeight-12)top=Math.max(12,r.top-p.offsetHeight-10);
@@ -414,6 +415,7 @@ function fly(){
 }
 el("docs").addEventListener("click",event=>{
  const more=event.target.closest("[data-more]");if(more){state.visible[more.dataset.more]=(state.visible[more.dataset.more]||70)+70;renderDocs();return;}
+ const pick=event.target.closest("[data-pick-step]");if(pick){const d=state.docs.find(x=>x.id===pick.dataset.pickStep);if(d)showDetails(d,pick);return;}
  const detail=event.target.closest("[data-details]");
  if(detail){const d=state.docs.find(x=>x.id===detail.dataset.details);if(d)showDetails(d,detail);return;}
  const tagButton=event.target.closest("[data-flag]");
@@ -425,11 +427,7 @@ el("docs").addEventListener("click",event=>{
  const card=event.target.closest("[data-record]");
  if(card&&!event.target.closest("select,button,input")){const d=state.docs.find(x=>x.id===card.dataset.record);if(d)highlightDoc(d);}
 });
-el("docs").addEventListener("change",event=>{
- const select=event.target.closest("[data-step-assign]");if(!select)return;
- const d=state.docs.find(x=>x.id===select.dataset.stepAssign);
- if(d){patch(d,{step:select.value,confirmed:false,excluded:false,manual:true,candidates:[],reason:"Ручное назначение, ожидает подтверждения"});render();}
-});
+
 el("search").addEventListener("input",renderDocs);
 document.querySelectorAll("[data-venn]").forEach(button=>button.addEventListener("click",()=>{el("uniqueFilter").value=button.dataset.venn;render();}));
  el("sourceFilter").addEventListener("change",renderDocs);
@@ -469,6 +467,11 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePopover();clos
 document.addEventListener("click",e=>{if(!e.target.closest(".pair-row")&&!e.target.closest("#pairPopover"))closePopover()});
 el("pairPopover").addEventListener("click",e=>{if(e.target.closest(".pop-close"))closePopover()});
 el("pairPopover").addEventListener("change",e=>{
+ const picker=e.target.closest("[data-pick-step-select]");
+ if(picker){const doc=state.docs.find(d=>d.id===el("pairPopover").dataset.recordId);if(doc){
+ patch(doc,{step:picker.value,confirmed:false,excluded:false,manual:true,candidates:[],reason:"Ручное назначение: требуется подтверждение"});
+ render();el("pairPopover").querySelector(".pair-popover-footer").textContent="Шаг изменён вручную. Подтверди связь кнопкой ✓ в строке.";
+ }return;}
  const s=e.target.closest("[data-edit-flag]");if(!s)return;
  const doc=state.docs.find(d=>d.id===el("pairPopover").dataset.recordId);if(!doc)return;
  const f=Object.assign({},edited(doc).flags||{}),key=s.dataset.editFlag;
