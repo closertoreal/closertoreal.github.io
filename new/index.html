@@ -276,6 +276,12 @@ html body .diagram .node.has-content-change.current::after{content:"РАССМА
 .bpmn-inspection-loop .bpmn-mini-task{max-width:150px;flex:0 1 150px}
 .bpmn-no{color:#358369}
 @media(max-width:700px){.bpmn-loop-row{gap:4px}.bpmn-mini-gateway{width:75px;font-size:9px}.bpmn-mini-task{padding:6px;font-size:9px}.bpmn-flow-arrow{font-size:12px}.bpmn-loop-branch{flex-wrap:wrap}.bpmn-loop-up{white-space:normal}.bpmn-mini-task small{font-size:8px}}
+
+/* Полноценные ссылки на вкладки, включая узкие экраны. */
+.new-tabs a.psd-mapping-tab,.new-tabs a.psd-reconcile-tab{display:inline-flex!important;align-items:center;justify-content:center;text-decoration:none;border-radius:9px;padding:8px 13px;color:#536276;font-weight:750;white-space:nowrap;font-size:12px}
+.new-tabs a.psd-mapping-tab:hover,.new-tabs a.psd-reconcile-tab:hover{background:#f8fbfe;color:#164a6a}
+@media(max-width:1400px){.new-tabs{flex-wrap:wrap}.new-tabs a.psd-mapping-tab,.new-tabs a.psd-reconcile-tab{flex:1 1 auto}}
+@media(max-width:720px){.new-tabs a.psd-mapping-tab,.new-tabs a.psd-reconcile-tab{font-size:10px;padding:7px}}
 </style>
 <link rel="stylesheet" href="./protocol.css?v=202611172240">
 <script>document.documentElement.classList.toggle("protocol-enabled",new URLSearchParams(location.search).get("protocol")==="1");</script>
