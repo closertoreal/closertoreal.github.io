@@ -89,7 +89,7 @@ function matchesFilters(d){
  const matchType=el("uniqueFilter").value,qFilter=el("questionFilter").value,uni=unique(d);
  if(matchType==="n"&&uni!=="n"||matchType==="d"&&uni!=="d"||matchType==="both"&&uni!=="both"||matchType==="different"&&(uni!=="both"||!/(различи|не совпада|отлича)/i.test(d.comparison)))return false;
  if(qFilter==="has"&&!d.comment||qFilter==="none"&&d.comment)return false;
- if(state.focus&&x.step!==state.focus)return false;
+ /* Левая колонка сохраняет контекст при выборе шага. */
  if(state.unmarked&&keys.some(k=>effectiveFlags(d)[k]===1))return false;
  if(state.tagFilters.length&&!state.tagFilters.every(k=>effectiveFlags(d)[k]===1))return false;
  return true;
@@ -132,30 +132,126 @@ function renderDocs(){
  // For each row, select the assigned step after HTML injection, avoiding regex substitutions.
  el("docs").querySelectorAll(".pair-step-select").forEach(x=>{const id=x.dataset.stepAssign,d=state.docs.find(z=>z.id===id);if(d)x.value=edited(d).step||""});
 }
-function renderDiagram(){
- const by=Object.fromEntries(steps.map(s=>[s.code,[]]));
- for(const d of state.docs){if(d.category)continue;const e=edited(d);if(e.step&&by[e.step]&&!e.excluded)by[e.step].push(d);}
- let html="";
- for(const [phase,codes]of periods){
-  html+='<section class="phase"><h3>'+esc(phase)+'</h3><div class="node-grid">';
-  for(const code of codes){
-   const step=stepBy[code],rows=by[code];if(!step)continue;
-   html+='<button class="node '+(!rows.length?"empty-node ":"")+(state.focus===code?"current":"")+'" type="button" data-step="'+esc(code)+'">'+
-   '<div class="node-head"><span class="node-num">ШАГ '+esc(code)+'</span><span class="node-count">'+rows.length+' док.</span></div>'+
-   '<p class="node-title">'+esc(step.title)+'</p>'+
-   (rows.length?'<div class="node-sample">'+esc(rows.slice(0,2).map(x=>(x.nName||x.dName).slice(0,65)).join(" · "))+(rows.length>2?" · +"+(rows.length-2):"")+'</div>':"")+'</button>';
-  }
-  html+='</div></section>';
- }
- if(state.focus){
-  const s=stepBy[state.focus],rows=by[state.focus]||[];
-  html+='<section class="step-info"><h4>Шаг '+esc(state.focus)+' · '+esc(s.title)+'</h4><p>Назначено '+rows.length+' строк. Назначения с пометкой «предложено» ещё не подтверждены.</p></section>';
- }
- el("diagram").innerHTML=html;el("currentFocus").textContent=state.focus?"Выбран шаг "+state.focus:"Все 35 шагов";
- const missing=state.docs.filter(d=>status(d)==="missing");
- el("gapExplain").textContent=state.distributed?("Без соответствия: "+missing.length+" документов. Это вопросы к схеме, не автоматически доказанные пропуски."):"Нажми «Распределить по шагам» для поиска кандидатов на пробелы.";
- el("gapSamples").innerHTML=missing.slice(0,12).map(d=>'<button data-show="'+esc(d.id)+'" title="'+esc(d.nCode+" / "+d.dCode)+'">'+esc((d.nName||d.dName).slice(0,66))+'</button>').join("");
+
+function showTagDefinition(key,anchor){
+ if(!terms[key])return;
+ const p=el("definition"),r=anchor.getBoundingClientRect();
+ el("defHeading").textContent=key+" · юридическая функция ИД";
+ el("defText").textContent=terms[key];
+ p.style.left=Math.max(12,Math.min(window.innerWidth-365,r.left))+"px";
+ p.style.top=Math.max(12,Math.min(window.innerHeight-160,r.bottom+9))+"px";
+ p.classList.add("open");
 }
+function scoped(d){
+ const v=el("uniqueFilter").value,u=unique(d);
+ return !v||v==="union"||v==="both"&&u==="both"||v==="n"&&u==="n"||v==="d"&&u==="d"||v==="different"&&u==="both"&&/(различи|не совпада|отлича)/i.test(d.comparison);
+}
+function mappedDocs(){
+ const by=Object.fromEntries(steps.map(s=>[s.code,[]]));
+ if(state.distributed)for(const d of state.docs){if(d.category||!scoped(d))continue;const e=edited(d);if(e.step&&by[e.step]&&!e.excluded)by[e.step].push(d);}
+ return by;
+}
+function stepFlagRows(rows){
+ const counts={done:0,quality:0,them:0,next:0};
+ for(const d of rows){const f=effectiveFlags(d);for(const k of keys)if(f[k]===1)counts[k]++;}
+ return counts;
+}
+function stepLabels(rows){
+ const c=stepFlagRows(rows);
+ return keys.filter(k=>c[k]>0).map(k=>'<button type="button" class="map-tag" data-step-tag="'+k+'" title="'+esc(terms[k])+'">'+k+' <small>'+c[k]+'</small></button>').join("");
+}
+function stepMarkup(code,by){
+ const s=stepBy[code],records=by[code]||[],flag=records.length;
+ return '<div class="map-node'+(flag?" mapped":" unmapped")+(state.focus===code?" chosen":"")+'" data-step="'+esc(code)+'" tabindex="0" role="button" aria-label="Шаг '+esc(code)+'. '+esc(s.title)+'. Показать документы">'+
+ '<div class="map-node-top"><b>Шаг '+esc(code)+'</b><span class="map-count'+(flag?'':' zero')+'">'+flag+' док.</span></div>'+
+ '<div class="map-node-title">'+esc(s.title)+'</div>'+
+ '<div class="map-tags">'+(flag?stepLabels(records):'<span class="map-empty">Нет назначенных документов</span>')+'</div></div>';
+}
+function seq(by,...codes){return codes.map((c,i)=>(i?'<div class="seq-arrow" aria-hidden="true">↓</div>':'')+stepMarkup(c,by)).join("")}
+function stage(title,body){return '<section class="map-stage"><header>'+esc(title)+'</header>'+body+'</section>'}
+function lane(title,html){return '<section class="map-lane"><div class="map-lane-title">'+esc(title)+'</div>'+html+'</section>'}
+function arrow(){return '<div class="map-major-arrow" aria-hidden="true"><span>↓</span></div>'}
+function parallel(by,codes){
+ return '<div class="map-parallel" aria-label="Параллельные действия"><div class="parallel-track" aria-hidden="true"></div>'+codes.map(c=>stepMarkup(c,by)).join("")+'</div>';
+}
+function renderDiagram(){
+ const by=mappedDocs();
+ let html=seq(by,"0","1","2")+arrow();
+ html+=stage("Подготовка к СМР · параллельные направления",
+ '<div class="map-prep-grid">'+
+ lane("Госстройнадзор",stepMarkup("6",by))+
+ lane("Авторский надзор",stepMarkup("3",by))+
+ lane("Организация СМР",seq(by,"4а","4б"))+
+ lane("Ответственные и допуски",seq(by,"4в","4г","5"))+
+ lane("Геодезическая подготовка",seq(by,"7","9"))+
+ lane("МТР и оборудование",parallel(by,["8","11"])+'<div class="seq-arrow">↓</div>'+stepMarkup("10",by))+
+ '</div>')+arrow();
+ html+=stage("Выполнение СМР · текущий контроль",
+ '<div class="map-phase-hint">1. Выполнение работ</div>'+stepMarkup("16",by)+
+ '<div class="map-phase-hint">2. Контроль во время СМР, а не условие его начала</div>'+
+ parallel(by,["12","13","17"])+
+ '<div class="map-loop-hint">◇ Если есть замечания: устранение на шаге 16 → повторная проверка 12 / 13</div>'+
+ '<div class="map-phase-hint">3. Исполнительная съёмка и лабораторный контроль</div>'+
+ stepMarkup("14",by))+
+ arrow()+seq(by,"15","18")+
+ '<div class="map-loop-hint">◇ При отрицательной инспекции: шаг 16 → повторное предъявление на шаг 18</div>'+
+ arrow()+stage("Испытания и диагностика · параллельные направления",parallel(by,["21","22"]))+
+ arrow()+seq(by,"20","19","23")+
+ arrow()+stage("Комплексное опробование · параллельные направления",parallel(by,["26","27"]))+
+ arrow()+seq(by,"25","24","28")+
+ arrow()+stage("Завершение строительства · две ветви",parallel(by,["29","30"]))+
+ arrow()+stepMarkup("31",by);
+ el("diagram").innerHTML='<div class="mapped-flow">'+html+'</div>';
+ el("currentFocus").textContent=state.distributed?"Распределено по "+steps.length+" шагам · нажми карточку для состава":"Назначения подготовлены · нажми «Распределить по шагам»";
+ const missing=state.docs.filter(d=>!d.category&&scoped(d)&&status(d)==="missing");
+ const ambiguous=state.docs.filter(d=>!d.category&&scoped(d)&&status(d)==="ambiguous");
+ const countEmpty=Object.keys(by).filter(k=>by[k].length===0).length;
+ el("gapExplain").textContent=state.distributed?"Шаги без назначенных документов: "+countEmpty+"; документы без шага: "+missing.length+"; неоднозначные: "+ambiguous.length+". Пустой шаг не всегда ошибка (возможен вспомогательный процесс).":"Запусти распределение. Неоднозначные и отсутствующие соответствия останутся на проверку.";
+ el("gapSamples").innerHTML=missing.slice(0,12).map(d=>'<button type="button" data-show="'+esc(d.id)+'" title="'+esc(d.path)+'">'+esc((d.nName||d.dName).slice(0,64))+'</button>').join("");
+}
+function stepModal(code){
+ const step=stepBy[code];if(!step)return;
+ const docs=(mappedDocs()[code]||[]);
+ state.focus=code;renderDiagram();
+ const panel=el("stepModal");
+ if(!panel)return;
+ panel.querySelector(".step-dialog-title").textContent="Шаг "+code+" · "+step.title;
+ panel.querySelector(".step-dialog-caption").textContent=docs.length+" сопоставленных документов · "+(docs.filter(d=>edited(d).confirmed).length)+" подтверждено вручную";
+ const content=panel.querySelector(".step-dialog-list");
+ content.innerHTML=docs.length?docs.map(d=>{
+ const flags=keys.filter(k=>effectiveFlags(d)[k]===1);
+ const place=unique(d);
+ return '<article class="step-doc" data-dialog-doc="'+esc(d.id)+'">'+
+ '<div class="step-doc-head"><span class="doc-source '+(place==="n"?"src-n":place==="d"?"src-d":"")+'">'+(place==="both"?"НКНХ · ДГП":place==="n"?"НКНХ":"ДГП")+'</span>'+
+ '<span class="mini">'+esc(d.nCode||d.dCode)+'</span><span class="mini">'+(edited(d).confirmed?"✓ Подтверждено":"Гипотеза")+'</span></div>'+
+ '<strong>'+esc(d.nName||d.dName)+'</strong>'+
+ (d.nName&&d.dName&&norm(d.nName)!==norm(d.dName)?'<div class="step-doc-alternate">ДГП: '+esc(d.dName)+'</div>':"")+
+ '<div class="step-doc-flags">'+flags.map(k=>'<button type="button" class="map-tag" data-step-tag="'+k+'">'+k+'</button>').join("")+'</div>'+
+ '<button class="step-doc-link" type="button" data-jump-doc="'+esc(d.id)+'">Показать в реестре ↗</button></article>';
+ }).join(""):'<div class="empty">На этот шаг пока не назначено документов. Проверь, относится ли он к оформлению ИД либо является вспомогательным.</div>';
+ panel.hidden=false;
+ panel.querySelector(".step-dialog-close").focus({preventScroll:true});
+ document.body.classList.add("dialog-open");
+}
+function closeStepModal(){const panel=el("stepModal");if(panel){panel.hidden=true;document.body.classList.remove("dialog-open");}}
+function highlightDoc(d){
+ state.selected=d.id;state.focus=edited(d).step||null;
+ renderDocs();renderDiagram();
+ const step=state.focus&&el("diagram").querySelector('[data-step="'+state.focus+'"]');
+ if(step)step.scrollIntoView({behavior:"smooth",block:"center"});
+ else message("Для этого документа пока не удалось определить шаг. Он остаётся кандидатом на уточнение.");
+}
+function jumpDoc(id){
+ const doc=state.docs.find(d=>d.id===id);if(!doc)return;
+ closeStepModal();state.selected=id;state.focus=null;
+ // The record may be hidden by the current filter; reset only presentation filters.
+ el("search").value=doc.nCode||doc.dCode||doc.nName;
+ el("statusFilter").value="";el("questionFilter").value="";el("uniqueFilter").value="union";
+ render();
+ const record=el("docs").querySelector('[data-record="'+CSS.escape(id)+'"]');
+ if(record)record.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
 function render(){
  const z=summary();for(const k of ["All","Placed","Missing","Ambiguous","Confirmed"])el("count"+k).textContent=z[k.toLowerCase()];
  const n=state.docs.filter(d=>unique(d)==="n").length,d=state.docs.filter(d=>unique(d)==="d").length,comments=state.docs.filter(x=>x.comment).length;
@@ -281,7 +377,7 @@ el("docs").addEventListener("click",event=>{
  const no=event.target.closest("[data-outside]");
  if(no){const d=state.docs.find(x=>x.id===no.dataset.outside);if(d){patch(d,{excluded:!edited(d).excluded,confirmed:false,manual:true});render();}return;}
  const card=event.target.closest("[data-record]");
- if(card&&!event.target.closest("select,button,input")){const d=state.docs.find(x=>x.id===card.dataset.record);if(d)showDetails(d,card);}
+ if(card&&!event.target.closest("select,button,input")){const d=state.docs.find(x=>x.id===card.dataset.record);if(d)highlightDoc(d);}
 });
 el("docs").addEventListener("change",event=>{
  const select=event.target.closest("[data-step-assign]");if(!select)return;
@@ -298,8 +394,15 @@ const k=button.dataset.filter;state.tagFilters=state.tagFilters.includes(k)?stat
 }));
 el("unmarked").addEventListener("click",()=>{state.unmarked=!state.unmarked;render()});
 el("diagram").addEventListener("click",event=>{
- const b=event.target.closest("[data-step]");if(!b)return;
- state.focus=state.focus===b.dataset.step?null:b.dataset.step;persist();render();
+ const tag=event.target.closest("[data-step-tag]");
+ if(tag){event.stopPropagation();showTagDefinition(tag.dataset.stepTag,tag);return;}
+ const b=event.target.closest("[data-step]");if(b)stepModal(b.dataset.step);
+});
+el("diagram").addEventListener("keydown",event=>{if((event.key==="Enter"||event.key===" ")&&event.target.matches("[data-step]")){event.preventDefault();stepModal(event.target.dataset.step);}});
+el("stepModal").addEventListener("click",event=>{
+ const tag=event.target.closest("[data-step-tag]");if(tag){showTagDefinition(tag.dataset.stepTag,tag);return;}
+ const link=event.target.closest("[data-jump-doc]");if(link){jumpDoc(link.dataset.jumpDoc);return;}
+ if(event.target===el("stepModal")||event.target.closest(".step-dialog-close"))closeStepModal();
 });
 el("gapSamples").addEventListener("click",e=>{const b=e.target.closest("[data-show]");if(!b)return;
  const d=state.docs.find(x=>x.id===b.dataset.show);if(!d)return;state.focus=null;el("search").value=d.nCode||d.dCode;render();el("docs").scrollIntoView({behavior:"smooth",block:"start"});
@@ -315,7 +418,7 @@ el("export").addEventListener("click",()=>exportCsv("matrix"));
 el("exportQuestions").addEventListener("click",()=>exportCsv("questions"));
 el("resetDemo").addEventListener("click",()=>{if(state.scope!=="demo"&&!confirm("Заменить загруженный реестр демонстрационными документами? Перед этим сохрани матрицу."))return;state=EMPTY();autoClassify();persist();render()});
 el("closeDef").addEventListener("click",()=>el("definition").classList.remove("open"));
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closePopover()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePopover();closeStepModal();el("definition").classList.remove("open")}});
 document.addEventListener("click",e=>{if(!e.target.closest(".pair-row")&&!e.target.closest("#pairPopover"))closePopover()});
 el("pairPopover").addEventListener("click",e=>{if(e.target.closest(".pop-close"))closePopover()});
 restore();autoClassify();render();
