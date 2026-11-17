@@ -83,11 +83,11 @@ if(sm>=0){const [sixteen]=MODEL.steps.splice(sm,1);MODEL.steps.splice(MODEL.step
 state.index=Math.max(0,MODEL.steps.findIndex(x=>x.code===selectedCode));
 const changed=Object.fromEntries(MODEL.steps.filter(s=>originalSnapshot[s.code]&&["title","input","action","output"].some(f=>originalSnapshot[s.code][f]!==s[f])).map(s=>[s.code,true]));
 /* Обновлённые связи вход → выход по новым индексам. */
-for(const k of ["15|0|14","16|4|12","21|1|18","20|1|21","16|2|5","18|0|15"])delete STEP_REFERENCE_TARGETS[k];
+for(const k of ["15|0|14","16|4|12","21|1|18","20|1|21","20|4|19","16|2|5","18|0|15"])delete STEP_REFERENCE_TARGETS[k];
 Object.assign(STEP_REFERENCE_TARGETS,{
 "16|2|5":[0,1,2,3,4],"12|2|16":[0],"14|0|16":[0],
 "15|0|14":[0,1,2],"18|0|15":[0,1,2],"18|1|14":[0,1,2],
-"20|0|18":[2,3],"20|1|18":[4,5,6,7],"20|2|21":[0,1],"23|1|22":[0]
+"20|0|18":[2,3],"20|1|18":[4,5,6,7],"20|2|21":[0,1],"20|5|19":[0],"23|1|22":[0]
 });
 for(const key of Object.keys(OUTPUT_REVERSE_REFERENCES))delete OUTPUT_REVERSE_REFERENCES[key];
 for(const [key,outputs] of Object.entries(STEP_REFERENCE_TARGETS)){
