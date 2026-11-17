@@ -136,7 +136,7 @@ function pairHtml(d){
  const sides='<div class="pair-primary"><div class="source-stack">'+
  (hasN(d)?'<span class="source-stamp N">НКНХ</span>':'')+
  (hasD(d)?'<span class="source-stamp D">ДГП</span>':'')+
- '</div><h3>'+esc(primary)+'</h3>'+
+ '</div><h3>'+esc(primary)+'</h3><div class="work-kind-list">'+workBadges(d)+'</div>'+
  (different?'<div class="alternate-label">Формулировка ДГП отличается · нажми «Комментарий / вопрос» для полного сравнения</div>':'')+
  '<span class="pair-link-indicator">'+(e.step?'↗ Связано со шагом '+esc(e.step):'◇ Шаг не определён')+
  (e.autoConfidence==='low'?' · низкая уверенность':e.autoConfidence==='medium'?' · гипотеза':'')+'</span></div>';
@@ -258,7 +258,7 @@ function stepModal(code){
  '<span class="mini">'+esc(d.nCode||d.dCode)+'</span><span class="mini">'+(edited(d).confirmed?"✓ Подтверждено":"Гипотеза")+'</span></div>'+
  '<strong>'+esc(d.nName||d.dName)+'</strong>'+
  (d.nName&&d.dName&&norm(d.nName)!==norm(d.dName)?'<div class="step-doc-alternate">ДГП: '+esc(d.dName)+'</div>':"")+
- '<div class="step-doc-flags">'+flags.map(k=>'<button type="button" class="map-tag" data-step-tag="'+k+'">'+k+'</button>').join("")+'</div>'+
+ '<div class="work-kind-list">'+workBadges(d)+'</div><div class="step-doc-flags">'+flags.map(k=>'<button type="button" class="map-tag" data-step-tag="'+k+'">'+k+'</button>').join("")+'</div>'+
  '<button class="step-doc-link" type="button" data-jump-doc="'+esc(d.id)+'">Показать в реестре ↗</button></article>';
  }).join(""):'<div class="empty">На этот шаг пока не назначено документов. Проверь, относится ли он к оформлению ИД либо является вспомогательным.</div>';
  panel.hidden=false;
@@ -385,18 +385,18 @@ async function importFile(files){
  }catch(err){errors.push(file.name+": "+String(err.message||err));}
  }
  if(!aggregate.length){message("Загрузка не завершена: "+errors.join(" "));return;}
- state=EMPTY();state.docs=aggregate;state.scope="xlsm";state.distributed=false;autoClassify();persist();render();
+ const previous=state.edits||{};state=EMPTY();state.docs=aggregate;state.edits=Object.fromEntries(aggregate.filter(d=>previous[d.id]).map(d=>[d.id,previous[d.id]]));state.scope="xlsm";state.distributed=false;autoClassify();persist();el("workFilter").value="";render();
  message("Импортировано "+aggregate.length+" строк из сопоставленного XLSM. Макросы не запускались. "+errors.join(" "));
 }
 function cell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
 function exportCsv(kind){
- const head=kind==="questions"?["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Статус","Шаг","Вопрос для уточнения"]:
- ["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Путь","Категория","Шаг","Статус","Основание","done","quality","them","next"];
+ const head=kind==="questions"?["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Виды работ","Статус","Шаг","Вопрос для уточнения"]:
+ ["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Виды работ","Путь","Категория","Шаг","Статус","Основание","done","quality","them","next"];
  const list=kind==="questions"?state.docs.filter(d=>!!d.comment||(!d.category&&["missing","ambiguous"].includes(status(d)))):state.docs;
  const rows=[head,...list.map(d=>{const x=edited(d),f=effectiveFlags(d);
  const start=[d.row,d.nCode,d.nName,d.dCode,d.dName,d.comparison,d.comment];
- return kind==="questions"?[...start,statusName(status(d)),x.step||"",(d.comment||"Где в процессе оформляется этот документ, и применим ли он к данному виду работ?")]:
- [...start,d.path,d.category?"Категория":"Документ",x.step||"",statusName(status(d)),x.reason||"",...keys.map(k=>f[k]===1?k:f[k]===0?"нет":"не оценено")];
+ return kind==="questions"?[...start,workName(d),statusName(status(d)),x.step||"",(d.comment||"Где в процессе оформляется этот документ, и применим ли он к данному виду работ?")]:
+ [...start,workName(d),d.path,d.category?"Категория":"Документ",x.step||"",statusName(status(d)),x.reason||"",...keys.map(k=>f[k]===1?k:f[k]===0?"нет":"не оценено")];
  })];
  const content="\uFEFF"+rows.map(r=>r.map(cell).join(";")).join("\r\n");
  const blob=new Blob([content],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
