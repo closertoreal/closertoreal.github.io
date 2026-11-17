@@ -37,7 +37,7 @@ main{max-width:1700px;margin:auto;padding:22px 20px 60px}.eyebrow{text-transform
 </head>
 <body>
 <header class="site-top">
-<div class="site-brand">СИД · NEW <small>Аналитический эксперимент по ПСД</small></div>
+<div class="site-brand">СИД · NEW <small>Матрица ПСД · v2026.11.17.2159</small></div>
 <nav class="site-tabs" aria-label="Разделы NEW"><a href="../">Схема СМР</a><a href="../?protocol=1">Протокол</a><a class="active" href="./" aria-current="page">Распределение ПСД</a></nav>
 </header>
 <main>
@@ -329,12 +329,12 @@ function animateFly(){
  var docs=filteredDocs().filter(d=>current(d).step).slice(0,9);
  var from=el("docs").getBoundingClientRect();
  docs.forEach((d,i)=>setTimeout(()=>{
-  const to=el("diagram").querySelector('[data-step="'+d.step+'"]')||el("diagram").querySelector('[data-step="'+current(d).step+'"]');
+  const to=el("diagram").querySelector('[data-step="'+current(d).step+'"]');
   if(!to)return;
   const t=to.getBoundingClientRect(),f=document.createElement("div");
   f.className="fly";f.textContent=d.name.slice(0,43);f.style.left=(from.left+24)+"px";f.style.top=(from.top+40+i%3*25)+"px";
   document.body.append(f);
-  const dx=t.left-from.left+Math.min(t.width/2,160),dy=t.top-from.top-32-i%3*25;
+  const dx=t.left-(from.left+24)+Math.min(t.width/2,80),dy=t.top-(from.top+40+i%3*25);
   f.animate([{opacity:0,transform:"scale(.75)"},{opacity:1,offset:.15},{opacity:.95,transform:"translate("+dx+"px,"+dy+"px) scale(.78)",offset:.88},{opacity:0,transform:"translate("+dx+"px,"+dy+"px) scale(.6)"}],{duration:750,fill:"forwards",easing:"ease-in-out"}).onfinish=()=>{f.remove();to.classList.add("node-target");setTimeout(()=>to.classList.remove("node-target"),1000)};
  },i*95));
 }
@@ -351,7 +351,7 @@ document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click"
 el("unmarked").addEventListener("click",()=>{state.unmarked=!state.unmarked;render()});
 el("docs").addEventListener("click",e=>{
  const b=e.target.closest("[data-flag-doc]");
- if(b){const d=state.docs.find(x=>x.id===b.dataset.flagDoc);if(!d)return;const f=Object.assign({},current(d).flags||{}),k=b.dataset.k;f[k]=f[k]===undefined?1:f[k]===1?0:undefined;if(f[k]===undefined)delete f[k];assign(d,{flags:f});renderDocs();showDefinition(e);return;}
+ if(b){const d=state.docs.find(x=>x.id===b.dataset.flagDoc);if(!d)return;const f=Object.assign({},current(d).flags||{}),k=b.dataset.k;f[k]=f[k]===undefined?1:f[k]===1?0:undefined;if(f[k]===undefined)delete f[k];assign(d,{flags:f});showDefinition(e);renderDocs();return;}
  const yes=e.target.closest("[data-confirm]");
  if(yes){const d=state.docs.find(x=>x.id===yes.dataset.confirm);if(d){assign(d,{confirmed:true,excluded:false});render();}return;}
  const no=e.target.closest("[data-exclude]");
