@@ -161,6 +161,7 @@ function goStep(code){
  const idx=steps.findIndex(x=>x.code===code);
  if(idx<0)return;
  lastStep=atStep();
+ followStep.previous=code;
  go(idx);
  refresh();
  const row=hub.querySelector(".er-detail");if(row)row.scrollTop=0;
@@ -171,7 +172,17 @@ function onClick(ev){
  if(!b||!hub.contains(b))return;
  if(b.hasAttribute("data-er-source")){source=b.dataset.erSource;selected=null;mobileDetail=false;refresh();return}
  if(b.hasAttribute("data-er-all")){scope="all";hub.querySelector("#erScope").value="all";selected=null;mobileDetail=false;refresh();return}
- if(b.hasAttribute("data-er-item")){selected=b.dataset.erItem;mobileDetail=true;refresh();return}
+ if(b.hasAttribute("data-er-item")){
+  selected=b.dataset.erItem;mobileDetail=true;
+  const record=data().find(r=>r.id===selected);
+  if(record&&record.steps.length&&!record.steps.includes(atStep())){
+    const code=record.steps[0],idx=steps.findIndex(s=>s.code===code);
+    if(idx>=0){followStep.previous=code;go(idx)}
+  }
+  refresh();
+  hub.querySelector("#erDetail").scrollTop=0;
+  return;
+ }
  if(b.hasAttribute("data-er-back")){mobileDetail=false;refresh();return}
  if(b.hasAttribute("data-er-goto")){goStep(b.dataset.erGoto);return}
  if(b.classList.contains("er-expand")){expanded=!expanded;refresh();return}
