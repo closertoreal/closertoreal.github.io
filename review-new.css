@@ -162,3 +162,11 @@
 .float-notes .legacy-note{margin:0 0 11px;padding:10px 12px;border-left:3px solid #c39d56;border-radius:5px;background:#fff9eb;color:#5b4b2f}
 .float-notes .legacy-note strong{display:block;margin-bottom:5px;font-size:11px}
 .float-notes .legacy-note p{margin:0;font-size:11px;line-height:1.55}
+
+/* Протокол и diff доступны по ?protocol=1, по умолчанию показана схема. */
+html:not(.protocol-enabled) .review-stack{display:none!important}
+html:not(.protocol-enabled) .workspace{grid-template-columns:minmax(0,1fr)!important}
+html:not(.protocol-enabled) .work .review-stack>.comment-panel>.protocol-view{display:none!important}
+html:not(.protocol-enabled) .node.has-new-change:before{display:none!important}
+html:not(.protocol-enabled) .node.has-new-change{box-shadow:none!important}
+.feedback-note{margin:7px 0;padding:7px 9px;background:#fbf8ef;border-left:3px solid #d8ac61;border-radius:3px;color:#655a42;font-size:11px;line-height:1.55}
