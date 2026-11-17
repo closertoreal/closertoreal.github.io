@@ -103,8 +103,15 @@ const options=()=>'<option value="">Не назначено</option>'+steps.map(
 function pairHtml(d){
  const e=edited(d),st=status(d),un=unique(d),badge=un==="n"?"Только НКНХ":un==="d"?"Только ДГП":d.category?"Категория":"Обе площадки";
  const comparison=String(d.comparison||"").trim(),hasComment=!!String(d.comment||"").trim();
- const sides='<div class="paired-cols"><div class="paired-side'+(!hasN(d)?" empty-side":"")+'"><div class="paired-label">НКНХ <small>'+esc(d.nCode||"нет")+'</small></div><div>'+esc(d.nName||"Отсутствует")+'</div></div>'+
- '<div class="paired-side'+(!hasD(d)?" empty-side":"")+'"><div class="paired-label">ДГП <small>'+esc(d.dCode||"нет")+'</small></div><div>'+esc(d.dName||"Отсутствует")+'</div></div></div>';
+ const primary=d.nName||d.dName;
+ const different=hasN(d)&&hasD(d)&&norm(d.nName)!==norm(d.dName);
+ const sides='<div class="pair-primary"><div class="source-stack">'+
+ (hasN(d)?'<span class="source-stamp N">НКНХ</span>':'')+
+ (hasD(d)?'<span class="source-stamp D">ДГП</span>':'')+
+ '</div><h3>'+esc(primary)+'</h3>'+
+ (different?'<div class="alternate-label">Формулировка ДГП отличается · нажми «Комментарий / вопрос» для полного сравнения</div>':'')+
+ '<span class="pair-link-indicator">'+(e.step?'↗ Связано со шагом '+esc(e.step):'◇ Шаг не определён')+
+ (e.autoConfidence==='low'?' · низкая уверенность':e.autoConfidence==='medium'?' · гипотеза':'')+'</span></div>';
  const controls=d.category?'<span class="note-status">Строка иерархии: не распределяется как документ</span>':
  '<select class="field pair-step-select" aria-label="Шаг сопоставления" data-step-assign="'+esc(d.id)+'">'+options().replace('<option value="'+esc(e.step||'')+'">','<option value="'+esc(e.step||'')+'" selected>')+'</select>'+
  '<button type="button" class="btn smol" data-confirm="'+esc(d.id)+'"'+(!e.step?" disabled":"")+'>✓</button>'+
@@ -260,6 +267,10 @@ function render(){
  el("banner").classList.toggle("ok",state.scope!=="demo");
  renderDocs();renderDiagram();
  document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",state.tagFilters.includes(x.dataset.filter)));
+ const leaf=state.docs.filter(d=>!d.category),N=leaf.filter(d=>unique(d)==="n").length,D=leaf.filter(d=>unique(d)==="d").length,B=leaf.filter(d=>unique(d)==="both").length;
+ el("vennUnion").textContent=leaf.length;el("vennBoth").textContent=B;el("vennN").textContent=N;el("vennD").textContent=D;
+ const chosen=el("uniqueFilter").value||"union";
+ document.querySelectorAll("[data-venn]").forEach(button=>button.classList.toggle("active",button.dataset.venn===chosen));
  el("unmarked").classList.toggle("active",state.unmarked);
 }
 function showDetails(d,anchor){
@@ -385,9 +396,10 @@ el("docs").addEventListener("change",event=>{
  if(d){patch(d,{step:select.value,confirmed:false,excluded:false,manual:true,candidates:[],reason:"Ручное назначение, ожидает подтверждения"});render();}
 });
 el("search").addEventListener("input",renderDocs);
-el("sourceFilter").addEventListener("change",renderDocs);
+document.querySelectorAll("[data-venn]").forEach(button=>button.addEventListener("click",()=>{el("uniqueFilter").value=button.dataset.venn;render();}));
+ el("sourceFilter").addEventListener("change",renderDocs);
 el("statusFilter").addEventListener("change",renderDocs);
-el("uniqueFilter").addEventListener("change",renderDocs);
+el("uniqueFilter").addEventListener("change",render);
 el("questionFilter").addEventListener("change",renderDocs);
 document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
 const k=button.dataset.filter;state.tagFilters=state.tagFilters.includes(k)?state.tagFilters.filter(x=>x!==k):[...state.tagFilters,k];render();
