@@ -188,12 +188,25 @@ button,input,.comment-editor{font:inherit}button{transition:background-color .16
 .content-card .context-tag{background:#e2efeb;color:#446f63}
 .content-card .item.related{border:1px solid #e2e5ea;border-left:3px solid #8c97aa;background:#f6f7fa}
 .content-card .related-tag{background:#e8ebf2;color:#59677d}
+
+/* Версия и проверка GitHub на стартовом экране и в шапке. */
+.release-check-widget{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;position:relative;max-width:100%;z-index:5}
+.release-check-btn{background:#fff;border:1px solid #adc9ce;border-radius:6px;color:#135c69;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer}
+.release-check-btn:hover{background:#e8f5f3}
+.release-check-btn:disabled{opacity:.55;cursor:progress}
+.release-check-result{position:absolute;z-index:9000;top:calc(100% + 8px);left:0;width:min(390px,calc(100vw - 24px));max-height:min(65vh,460px);overflow:auto;box-shadow:0 12px 36px #26374329;border:1px solid #c7dadf;background:#fff;padding:12px;border-radius:9px;color:#293c46;font-size:12px;line-height:1.55;white-space:normal}
+.release-check-result[hidden]{display:none!important}
+.release-result-line{margin:0 0 7px}
+.release-result-important{font-weight:700;color:#0d5565}
+.release-check-result a{display:block;padding-top:5px;color:#116477;font-weight:650}
+@media(max-width:700px){.release-check-widget{gap:4px}.release-check-btn{font-size:10px;padding:5px 7px}}
+
 </style>
 </head>
 <body>
-<form id="start" class="start"><h1>Проверка схемы взаимодействия участников СМР</h1><p>На экране постоянно видна полная схема. Выберите шаг на схеме, проверьте вход, действие и выход, а затем оставьте замечания или отметьте, что правки не нужны.</p><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
+<form id="start" class="start"><h1>Проверка схемы взаимодействия участников СМР</h1><p>На экране постоянно видна полная схема. Выберите шаг на схеме, проверьте вход, действие и выход, а затем оставьте замечания или отметьте, что правки не нужны.</p><div class="release-check-widget" data-release-widget data-release-branch="master" data-release-path="index.html" data-release-version="v2026.11.17.1610"><p class="release-stamp"><b>v2026.11.17.1610</b> · GitHub 17.11.2026 16:10 МСК</p><button type="button" class="release-check-btn" data-release-check>Проверить версию</button><div class="release-check-result" data-release-result aria-live="polite" hidden></div></div><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
 <main id="work" class="work hidden">
-  <header class="topbar"><div class="brand">Проверка схемы СМР</div><span id="who" class="small"></span><div class="spacer"></div><button id="download" class="primary">Скачать XLSX</button></header>
+  <header class="topbar"><div class="release-check-widget" data-release-widget data-release-branch="master" data-release-path="index.html" data-release-version="v2026.11.17.1610"><span class="release-stamp" role="status" aria-label="Версия сайта и время публикации в GitHub"><b>v2026.11.17.1610</b> · GitHub 17.11.2026 16:10 МСК</span><button type="button" class="release-check-btn" data-release-check>Проверить версию</button><div class="release-check-result" data-release-result aria-live="polite" hidden></div></div><div class="brand">Проверка схемы СМР</div><span id="who" class="small"></span><div class="spacer"></div><button id="download" class="primary">Скачать XLSX</button></header>
   <div class="workspace">
     <section class="panel diagram-panel" aria-labelledby="diagramHeading">
       <header class="panel-head"><div class="panel-caption"><span class="panel-index">01</span><div><h2 id="diagramHeading">Схема процесса</h2><span>Выберите шаг для проверки</span></div></div></header>
@@ -490,4 +503,98 @@ function downloadXlsx(){
 }
 load();if(state.fio)el('fio').value=state.fio;buildLegend();buildDiagram();
 </script>
+
+<script>
+(function(){
+"use strict";
+const REPO="closertoreal/closertoreal.github.io";
+const API="https://api.github.com/repos/"+REPO;
+const WIDGETS=[...document.querySelectorAll("[data-release-widget]")];
+const versionFrom=text=>String(text||"").match(/v20\d{2}\.\d{2}\.\d{2}\.\d{4}/)?.[0]||null;
+const remoteVersion=file=>{
+  if(!file||typeof file.content!=="string")return null;
+  try{return versionFrom(atob(file.content.replace(/\s/g,"")))}catch(e){return null}
+};
+const getJson=async url=>{
+  const response=await fetch(url,{cache:"no-store",headers:{"Accept":"application/vnd.github+json"}});
+  if(!response.ok)throw Error("GitHub API: HTTP "+response.status+(response.status===403?" (возможно, превышен лимит запросов)":""));
+  return response.json();
+};
+const addLine=(panel,text,important=false)=>{
+  const row=document.createElement("p");
+  row.className="release-result-line"+(important?" release-result-important":"");
+  row.textContent=text;panel.append(row);
+};
+async function check(widget){
+  const button=widget.querySelector("[data-release-check]");
+  const panel=widget.querySelector("[data-release-result]");
+  const branch=widget.dataset.releaseBranch;
+  const path=widget.dataset.releasePath;
+  const loaded=widget.dataset.releaseVersion;
+  panel.hidden=false;
+  panel.textContent="";
+  addLine(panel,"Проверяю GitHub и опубликованную страницу…");
+  button.disabled=true;
+  try{
+    const token=Date.now();
+    const pathEnc=path.split("/").map(encodeURIComponent).join("/");
+    const [masterFile,newFile,comparison,servedHtml]=await Promise.all([
+      getJson(API+"/contents/"+pathEnc+"?ref=master&_="+token),
+      getJson(API+"/contents/"+pathEnc+"?ref=NEW&_="+token),
+      getJson(API+"/compare/master...NEW?_="+token),
+      fetch(location.pathname+"?_release_check="+token,{cache:"no-store"})
+        .then(r=>r.ok?r.text():null).catch(()=>null)
+    ]);
+    const masterVer=remoteVersion(masterFile);
+    const newVer=remoteVersion(newFile);
+    const latestInBranch=branch==="master"?masterVer:newVer;
+    const servedVer=versionFrom(servedHtml);
+    panel.textContent="";
+    addLine(panel,"Открыта: "+loaded+" ("+branch+").");
+    if(latestInBranch===loaded){
+      addLine(panel,"✓ Версия совпадает с последним файлом в "+branch+".",true);
+    }else if(latestInBranch){
+      addLine(panel,"! В "+branch+" уже версия "+latestInBranch+". Обнови страницу (Ctrl+F5).",true);
+    }else{
+      addLine(panel,"Версию файла в "+branch+" определить не удалось.");
+    }
+    addLine(panel,"Версия файла в master: "+(masterVer||"без метки версии")+".");
+    if(servedVer){
+      addLine(panel,"Сервер сейчас отдаёт: "+servedVer+".");
+      if(branch==="master"&&masterVer&&servedVer!==masterVer){
+        addLine(panel,"! На сервере версия старее GitHub: публикация могла ещё не завершиться.",true);
+      }
+    }else{
+      addLine(panel,"Автоматически проверить текущую отдачу сайта не удалось.");
+    }
+    const ahead=Number(comparison.ahead_by);
+    const behind=Number(comparison.behind_by);
+    if(Number.isFinite(ahead)&&Number.isFinite(behind)){
+      addLine(panel,ahead>0?
+        "! В NEW есть "+ahead+" коммит(ов), которых нет в master.":
+        "✓ В NEW нет коммитов, отсутствующих в master.",ahead>0);
+      if(behind>0)addLine(panel,"В master есть "+behind+" коммит(ов), которых нет в NEW.");
+    }else{
+      addLine(panel,"Сравнение коммитов NEW и master не удалось получить.");
+    }
+    addLine(panel,"Это проверка опубликованных и неслитых коммитов. Локальные незакоммиченные изменения GitHub не видит.");
+    const link=document.createElement("a");
+    link.href="https://github.com/"+REPO+"/compare/master...NEW";
+    link.target="_blank";
+    link.rel="noopener noreferrer";
+    link.textContent="Посмотреть различия коммитов на GitHub";
+    panel.append(link);
+  }catch(error){
+    panel.textContent="";
+    addLine(panel,"Проверка не завершена: "+String(error?.message||error),true);
+    addLine(panel,"Статус неизвестен. Попробуй ещё раз; GitHub API может быть временно недоступен.");
+  }finally{button.disabled=false}
+}
+for(const widget of WIDGETS){
+  const button=widget.querySelector("[data-release-check]");
+  if(button)button.addEventListener("click",()=>check(widget));
+}
+})();
+</script>
+
 </body></html>
