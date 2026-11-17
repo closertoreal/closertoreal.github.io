@@ -72,6 +72,9 @@ function matchesFilters(d){
  if(query&&!norm([d.nCode,d.nName,d.dCode,d.dName,d.comparison,d.comment,d.path].join(" ")).includes(query))return false;
  if(source==="НКНХ"&&!hasN(d)||source==="ДГП"&&!hasD(d))return false;
  if(st&&status(d)!==st)return false;
+ const matchType=el("uniqueFilter").value,qFilter=el("questionFilter").value,uni=unique(d);
+ if(matchType==="n"&&uni!=="n"||matchType==="d"&&uni!=="d"||matchType==="both"&&uni!=="both"||matchType==="different"&&(uni!=="both"||!/(различи|не совпада|отлича)/i.test(d.comparison)))return false;
+ if(qFilter==="has"&&!d.comment||qFilter==="none"&&d.comment)return false;
  if(state.focus&&x.step!==state.focus)return false;
  if(state.unmarked&&keys.some(k=>(x.flags||{})[k]===1))return false;
  if(state.tagFilters.length&&!state.tagFilters.every(k=>(x.flags||{})[k]===1))return false;
@@ -277,6 +280,8 @@ el("docs").addEventListener("change",event=>{
 el("search").addEventListener("input",renderDocs);
 el("sourceFilter").addEventListener("change",renderDocs);
 el("statusFilter").addEventListener("change",renderDocs);
+el("uniqueFilter").addEventListener("change",renderDocs);
+el("questionFilter").addEventListener("change",renderDocs);
 document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
 const k=button.dataset.filter;state.tagFilters=state.tagFilters.includes(k)?state.tagFilters.filter(x=>x!==k):[...state.tagFilters,k];render();
 }));
