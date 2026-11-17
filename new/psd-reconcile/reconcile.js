@@ -84,14 +84,16 @@ function summary(){
 
 function workKey(code){const m=String(code||"").match(/^(00|01|02|03)\.(\d{2})(?:\.|$)/);return m?m[1]+"."+m[2]:"";}
 function workKeys(d){const a=[workKey(d.nCode),workKey(d.dCode)].filter(Boolean);if(!a.length){const m=String(d.path||"").match(/\b(?:00|01|02|03)\.\d{2}\b/);if(m)a.push(m[0])}return [...new Set(a.length?a:["other"])];}
+let workIndexCache={rows:null,index:null};
 function workIndex(){
+ if(workIndexCache.rows===state.docs&&workIndexCache.index)return workIndexCache.index;
  const ix=new Map();
  for(const d of state.docs)for(const [code,name] of [[d.nCode,d.nName],[d.dCode,d.dName]]){
   const key=workKey(code);if(!key)continue;if(!ix.has(key))ix.set(key,{name:key,count:0});
   if(String(code).trim()===key&&name)ix.get(key).name=String(name).replace(/\s+/g," ").trim();
  }
  for(const d of state.docs)if(!d.category)for(const key of workKeys(d)){if(!ix.has(key))ix.set(key,{name:key==="other"?"Без категории":key,count:0});ix.get(key).count++;}
- return ix;
+ workIndexCache={rows:state.docs,index:ix};return ix;
 }
 function workLabel(key){return workIndex().get(key)?.name||key;}
 function workName(d){return workKeys(d).map(key=>key+" · "+workLabel(key)).join(" / ")}
@@ -455,13 +457,13 @@ el("docs").addEventListener("click",event=>{
  if(card&&!event.target.closest("select,button,input")){const d=state.docs.find(x=>x.id===card.dataset.record);if(d)highlightDoc(d);}
 });
 
-el("search").addEventListener("input",renderDocs);
+el("search").addEventListener("input",render);
 document.querySelectorAll("[data-venn]").forEach(button=>button.addEventListener("click",()=>{el("uniqueFilter").value=button.dataset.venn;render();}));
- el("sourceFilter").addEventListener("change",renderDocs);
-el("statusFilter").addEventListener("change",renderDocs);
+ el("sourceFilter").addEventListener("change",render);
+el("statusFilter").addEventListener("change",render);
 el("uniqueFilter").addEventListener("change",render);
 el("workFilter").addEventListener("change",()=>{state.focus=null;render()});
-el("questionFilter").addEventListener("change",renderDocs);
+el("questionFilter").addEventListener("change",render);
 document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
 const k=button.dataset.filter;state.tagFilters=state.tagFilters.includes(k)?state.tagFilters.filter(x=>x!==k):[...state.tagFilters,k];render();
 }));
