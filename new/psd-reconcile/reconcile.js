@@ -292,6 +292,7 @@ function render(){
  const n=state.docs.filter(d=>unique(d)==="n").length,d=state.docs.filter(d=>unique(d)==="d").length,comments=state.docs.filter(x=>x.comment).length;
  el("bannerText").textContent=state.scope==="demo"?"Демо-данные: 40 пар актов. Чтобы увидеть уникальные позиции и вопросы, загрузи XLSM v6 (Лист1).":
  "Загружено "+state.docs.length+" строк сопоставления · только НКНХ: "+n+" · только ДГП: "+d+" · с вопросом: "+comments+". Данные остаются в браузере.";
+ if(state.scope!=="demo")el("bannerText").textContent+=state.sourceHash===REFERENCE_SHA256?" · ✓ Эталон v6.0 подтверждён (SHA-256)":state.sourceHash?" · ⚠ XLSM не совпадает побайтово с v6.0":"";
  el("banner").classList.toggle("ok",state.scope!=="demo");
  renderDocs();renderDiagram();
  document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",state.tagFilters.includes(x.dataset.filter)));
@@ -362,14 +363,22 @@ function parseDelimited(text){
  const names=headers.map(x=>{const n=seen.get(x)||0;seen.set(x,n+1);return n?x+"_"+n:x});
  return rows.map(line=>Object.fromEntries(names.map((name,i)=>[name,line[i]||""])));
 }
+
+const REFERENCE_SHA256="c3300f658de9f6455705633372a352f8f65537b9978ffcc66b91fbb83056e678";
+async function digestSHA256(bytes){
+ if(!window.crypto?.subtle)return null;
+ try{const hash=await window.crypto.subtle.digest("SHA-256",bytes);return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return null}
+}
 async function importFile(files){
- const aggregate=[],errors=[];
+ const aggregate=[],errors=[],fingerprints=[];
+
  for(const file of files){
  try{
   const ext=file.name.split(".").pop().toLowerCase();
   if(["xlsm","xlsx","xls"].includes(ext)){
    if(!window.XLSX){errors.push("Не загрузилась библиотека Excel: попробуй CSV.");continue;}
-   const workbook=window.XLSX.read(await file.arrayBuffer(),{type:"array",cellFormula:false});
+   const bytes=await file.arrayBuffer();fingerprints.push({name:file.name,sha:await digestSHA256(bytes)});
+   const workbook=window.XLSX.read(bytes,{type:"array",cellFormula:false});
    let matched=false;
    for(const name of workbook.SheetNames){
     const rows=window.XLSX.utils.sheet_to_json(workbook.Sheets[name],{defval:""});
@@ -387,8 +396,8 @@ async function importFile(files){
  }catch(err){errors.push(file.name+": "+String(err.message||err));}
  }
  if(!aggregate.length){message("Загрузка не завершена: "+errors.join(" "));return;}
- const previous=state.edits||{};state=EMPTY();state.docs=aggregate;state.edits=Object.fromEntries(aggregate.filter(d=>previous[d.id]).map(d=>[d.id,previous[d.id]]));state.scope="xlsm";state.distributed=false;autoClassify();persist();el("workFilter").value="";render();
- message("Импортировано "+aggregate.length+" строк из сопоставленного XLSM. Макросы не запускались. "+errors.join(" "));
+ const previous=state.edits||{};state=EMPTY();state.docs=aggregate;state.edits=Object.fromEntries(aggregate.filter(d=>previous[d.id]).map(d=>[d.id,previous[d.id]]));state.scope="xlsm";state.sourceHash=fingerprints.length===1?fingerprints[0].sha:null;state.distributed=false;autoClassify();persist();el("workFilter").value="";render();
+ message("Импортировано "+aggregate.length+" строк. "+(state.sourceHash===REFERENCE_SHA256?"✓ Точный эталон v6.0 подтверждён SHA-256.":state.sourceHash?"Файл отличается от эталонного XLSM v6.0 по контрольной сумме; проверь версию.":"Контрольная сумма не рассчитана.")+" Макросы не запускались. "+errors.join(" "));
 }
 function cell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
 function exportCsv(kind){
