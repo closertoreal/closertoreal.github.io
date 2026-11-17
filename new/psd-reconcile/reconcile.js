@@ -96,7 +96,7 @@ function matchesFilters(d){
 }
 function groupOf(d){const parts=String(d.path||"").split(" / ");return parts.length>=2?parts.slice(0,2).join(" / "):parts[0]||"Раздел не определён"}
 function tag(d,k){
- const x=effectiveFlags(d)[k],v=x===undefined?"?":String(x);
+ const x=effectiveFlags(d)[k],v=x==null?"?":String(x);
  return '<button type="button" class="flag" data-flag="'+k+'" data-id="'+esc(d.id)+'" data-v="'+v+'" data-k="'+k+'" title="'+esc(terms[k])+' · нажми для определения">'+(v==="1"?k:v==="0"?"−":"? "+k)+'</button>';
 }
 const options=()=>'<option value="">Не назначено</option>'+steps.map(s=>'<option value="'+esc(s.code)+'">Шаг '+esc(s.code)+' · '+esc(s.title.slice(0,38))+'</option>').join("");
@@ -281,7 +281,17 @@ function showDetails(d,anchor){
  '<div><strong>ДГП</strong><small>'+esc(d.dCode||"Нет")+'</small><p>'+esc(d.dName||"Не найдено в ДГП")+'</p></div></div>'+
  '<div class="pair-popover-diff"><strong>Результат сравнения</strong><p>'+esc(d.comparison||"Не отмечено")+'</p></div>'+
  '<div class="pair-popover-question"><strong>Твой комментарий / вопрос</strong><p>'+esc(d.comment||"Комментария нет")+'</p></div>'+
+
+ '<div class="pair-editor"><strong>Юридические функции ИД · предварительная оценка</strong><p>'+esc(edited(d).autoFlagsReason||"Назначение требует проверки")+'</p>'+
+ '<div class="pair-edit-grid">'+keys.map(key=>{
+  const manual=edited(d).flags||{},v=Object.prototype.hasOwnProperty.call(manual,key)?(manual[key]===1?"1":manual[key]===0?"0":"?"):"auto";
+  return '<label><span>'+key+'</span><select class="field" data-edit-flag="'+key+'"><option value="auto"'+(v==="auto"?" selected":"")+'>Авто</option>'+
+  '<option value="1"'+(v==="1"?" selected":"")+'>Да</option><option value="0"'+(v==="0"?" selected":"")+'>Нет</option>'+
+  '<option value="?"'+(v==="?"?" selected":"")+'>Не определено</option></select></label>';
+ }).join("")+'</div><p class="pair-edit-disclaimer">«Авто» возвращает предварительную оценку. Выбор сохраняется только в твоём браузере.</p></div>'+
+
  '<div class="pair-popover-footer">Исходная формулировка сохранена. Распределение по шагам: '+esc(statusName(status(d)))+(edited(d).step?" · шаг "+esc(edited(d).step):"")+'.</div>';
+ p.dataset.recordId=d.id;
  p.hidden=false;const r=anchor.getBoundingClientRect();
  p.style.width=Math.min(440,window.innerWidth-24)+"px";p.style.left=Math.max(12,Math.min(r.left,window.innerWidth-p.offsetWidth-12))+"px";
  let top=r.bottom+9;if(top+p.offsetHeight>window.innerHeight-12)top=Math.max(12,r.top-p.offsetHeight-10);
@@ -433,5 +443,13 @@ el("closeDef").addEventListener("click",()=>el("definition").classList.remove("o
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePopover();closeStepModal();el("definition").classList.remove("open")}});
 document.addEventListener("click",e=>{if(!e.target.closest(".pair-row")&&!e.target.closest("#pairPopover"))closePopover()});
 el("pairPopover").addEventListener("click",e=>{if(e.target.closest(".pop-close"))closePopover()});
+el("pairPopover").addEventListener("change",e=>{
+ const s=e.target.closest("[data-edit-flag]");if(!s)return;
+ const doc=state.docs.find(d=>d.id===el("pairPopover").dataset.recordId);if(!doc)return;
+ const f=Object.assign({},edited(doc).flags||{}),key=s.dataset.editFlag;
+ if(s.value==="auto")delete f[key];else f[key]=s.value==="1"?1:s.value==="0"?0:null;
+ patch(doc,{flags:f});renderDocs();renderDiagram();
+});
+
 restore();autoClassify();render();
 })();
