@@ -188,13 +188,14 @@ button,input,.comment-editor{font:inherit}button{transition:background-color .16
 .content-card .context-tag{background:#e2efeb;color:#446f63}
 .content-card .item.related{border:1px solid #e2e5ea;border-left:3px solid #8c97aa;background:#f6f7fa}
 .content-card .related-tag{background:#e8ebf2;color:#59677d}
+.release-stamp{display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:11px;line-height:1.3;padding:5px 9px;border:1px solid #cbdcde;border-radius:6px;background:#f4faf9;color:#385660;white-space:normal}.release-stamp b{color:#175e69;font-weight:800}@media(max-width:720px){.release-stamp{font-size:10px;padding:4px 6px}}
 </style>
-<link rel="stylesheet" href="./review-new.css?v=20261110f">
+<link rel="stylesheet" href="./review-new.css?v=v202611171603">
 </head>
 <body>
-<form id="start" class="start"><h1>Проверка схемы взаимодействия участников СМР</h1><p>На экране постоянно видна полная схема. Выберите шаг на схеме, проверьте вход, действие и выход, а затем оставьте замечания или отметьте, что правки не нужны.</p><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
+<form id="start" class="start"><h1>Проверка схемы взаимодействия участников СМР</h1><p>На экране постоянно видна полная схема. Выберите шаг на схеме, проверьте вход, действие и выход, а затем оставьте замечания или отметьте, что правки не нужны.</p><p class="release-stamp"><b>v2026.11.17.1603</b> · GitHub 17.11.2026 16:03 МСК</p><label for="fio">Фамилия, имя, отчество</label><input id="fio" class="field" name="fio" autocomplete="name" enterkeyhint="go" placeholder="Введите ФИО" required><button id="begin" class="primary" type="submit">Начать проверку</button></form>
 <main id="work" class="work hidden">
-  <header class="topbar"><div class="brand">Проверка схемы СМР</div><span id="who" class="small"></span><div class="spacer"></div><button id="download" class="primary">Скачать XLSX</button></header>
+  <header class="topbar"><span class="release-stamp" role="status" aria-label="Версия сайта и время публикации в GitHub"><b>v2026.11.17.1603</b> · GitHub 17.11.2026 16:03 МСК</span><div class="brand">Проверка схемы СМР</div><span id="who" class="small"></span><div class="spacer"></div><button id="download" class="primary">Скачать XLSX</button></header>
   <div class="workspace">
     <section class="panel diagram-panel" aria-labelledby="diagramHeading">
       <header class="panel-head"><div class="panel-caption"><span class="panel-index">01</span><div><h2 id="diagramHeading">Схема процесса</h2><span>Выберите шаг для проверки</span></div></div></header>
@@ -491,5 +492,5 @@ function downloadXlsx(){
 }
 load();if(state.fio)el('fio').value=state.fio;buildLegend();buildDiagram();
 </script>
-<script src="./review-new.js?v=20261110f"></script>
+<script src="./review-new.js?v=v202611171603"></script>
 </body></html>
