@@ -378,6 +378,7 @@ function exportCsv(kind){
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  message("CSV выгружен: "+list.length+" строк. Исходные вопросы и оба названия сохранены.");
 }
+
 function fly(){
  const groups=Object.entries(mappedDocs()).filter(([,records])=>records.length);
  const area=el("docs").getBoundingClientRect();
