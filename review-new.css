@@ -170,3 +170,5 @@ html:not(.protocol-enabled) .work .review-stack>.comment-panel>.protocol-view{di
 html:not(.protocol-enabled) .node.has-new-change:before{display:none!important}
 html:not(.protocol-enabled) .node.has-new-change{box-shadow:none!important}
 .feedback-note{margin:7px 0;padding:7px 9px;background:#fbf8ef;border-left:3px solid #d8ac61;border-radius:3px;color:#655a42;font-size:11px;line-height:1.55}
+
+.step-diff-toggle{border:1px solid #a8c4c7!important;background:#f5fbfa!important;color:#24616e!important;font-weight:750!important}.step-diff-toggle:disabled{opacity:.5}.new-inline-diff{white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}.diff-remove,.diff-add{border-radius:3px;padding:1px;box-decoration-break:clone}.diff-remove{background:#ffe4e3;color:#9d312d;text-decoration:line-through;text-decoration-color:#c24e49}.diff-add{background:#e0f3e6;color:#196b44;text-decoration:underline;text-decoration-color:#2f9e68;text-underline-offset:2px}
