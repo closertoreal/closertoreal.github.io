@@ -4,6 +4,8 @@ const el=id=>document.getElementById(id);
 const steps=JSON.parse(el("seed-steps").textContent);
 const sample=JSON.parse(el("seed-docs").textContent);
 const keys=["done","quality","them","next"];
+const classifier=window.PSDClassifier;
+if(!classifier)throw Error("Не подключён модуль классификации ПСД");
 const terms={done:"Факт выполнения конкретных видов и объёма работ",quality:"Соответствие проектной и нормативно-технической документации, требуемый уровень качества",them:"Участие конкретных исполнителей, организаций, подразделений или лиц",next:"Возможность производства последующих видов работ"};
 const periods=[["Подготовка строительства",["0","1","2","3","4а","4б","4в","4г","5","6","7","8","9","10","11"]],["СМР и контроль",["16","12","13","17","14"]],["Приёмочная инспекция",["15","18"]],["Испытания и комплектование ИД",["21","22","20","19"]],["Приёмка и пусконаладка",["23","26","27","25","24","28"]],["Передача, ввод, хранение",["29","30","31"]]];
 const RULES=[
@@ -54,14 +56,26 @@ function hasD(d){return !!(d.dCode||d.dName)}
 function unique(d){return hasN(d)&&hasD(d)?"both":hasN(d)?"n":hasD(d)?"d":"none"}
 function status(d){const x=edited(d);if(d.category)return"group";if(x.excluded)return"outside";if(x.confirmed&&x.step)return"confirmed";if(x.step)return"proposed";if((x.candidates||[]).length>1)return"ambiguous";if(state.distributed)return"missing";return"pending"}
 function statusName(s){return {group:"Раздел",outside:"Вне схемы",confirmed:"Подтверждено",proposed:"Предложено",ambiguous:"Несколько шагов",missing:"Без шага",pending:"Не распределено"}[s]||s}
-function suggest(d){const text=norm([d.nName,d.dName].filter(Boolean).join(" | "));return [...new Set(RULES.filter(x=>x[1].test(text)).map(x=>x[0]))]}
-function distribute(){
+
+function effectiveFlags(d){const x=edited(d);return Object.assign({},x.autoFlags||{},x.flags||{})}
+function autoClassify(){
+ let touched=0;
  for(const d of state.docs){
-  if(d.category)continue;const e=edited(d);if(e.confirmed||e.manual||e.excluded)continue;
-  const found=suggest(d);
-  patch(d,{step:found.length===1?found[0]:"",candidates:found,reason:found.length===1?"Автоматическая гипотеза по наименованию":found.length>1?"Несколько возможных шагов":"Совпадение не найдено",confirmed:false,manual:false});
+  if(d.category)continue;
+  const old=edited(d),classification=classifier.classify(d),mapped=classifier.route(d);
+  const update={autoFlags:classification.flags,autoFlagsReason:classification.why,autoConfidence:mapped.confidence};
+  if(!old.manual&&!old.confirmed&&!old.excluded){
+    update.step=mapped.step;update.candidates=mapped.candidates;update.reason=mapped.reason;update.aggregate=mapped.confidence==="low";update.confirmed=false;
+  }
+  state.edits[d.id]=Object.assign({},old,update);
+  touched++;
  }
- state.distributed=true;persist();render();fly();message("Предложено распределение. Непривязанные строки требуют проверки, а не автоматического добавления шага.");
+ return touched;
+}
+function distribute(){
+ autoClassify();
+ state.distributed=true;persist();render();fly();
+ message("Документы распределены по шагам. Это предварительная классификация; нераспределённые и спорные документы отдельно отмечены.");
 }
 function summary(){
  const out={all:0,placed:0,missing:0,ambiguous:0,confirmed:0};
@@ -76,14 +90,14 @@ function matchesFilters(d){
  if(matchType==="n"&&uni!=="n"||matchType==="d"&&uni!=="d"||matchType==="both"&&uni!=="both"||matchType==="different"&&(uni!=="both"||!/(различи|не совпада|отлича)/i.test(d.comparison)))return false;
  if(qFilter==="has"&&!d.comment||qFilter==="none"&&d.comment)return false;
  if(state.focus&&x.step!==state.focus)return false;
- if(state.unmarked&&keys.some(k=>(x.flags||{})[k]===1))return false;
- if(state.tagFilters.length&&!state.tagFilters.every(k=>(x.flags||{})[k]===1))return false;
+ if(state.unmarked&&keys.some(k=>effectiveFlags(d)[k]===1))return false;
+ if(state.tagFilters.length&&!state.tagFilters.every(k=>effectiveFlags(d)[k]===1))return false;
  return true;
 }
 function groupOf(d){const parts=String(d.path||"").split(" / ");return parts.length>=2?parts.slice(0,2).join(" / "):parts[0]||"Раздел не определён"}
 function tag(d,k){
- const x=(edited(d).flags||{})[k],v=x===undefined?"?":String(x);
- return '<button type="button" class="flag" data-flag="'+k+'" data-id="'+esc(d.id)+'" data-v="'+v+'" data-k="'+k+'" title="'+esc(terms[k])+'">'+(v==="1"?k:v==="0"?"−":"? "+k)+'</button>';
+ const x=effectiveFlags(d)[k],v=x===undefined?"?":String(x);
+ return '<button type="button" class="flag" data-flag="'+k+'" data-id="'+esc(d.id)+'" data-v="'+v+'" data-k="'+k+'" title="'+esc(terms[k])+' · нажми для определения">'+(v==="1"?k:v==="0"?"−":"? "+k)+'</button>';
 }
 const options=()=>'<option value="">Не назначено</option>'+steps.map(s=>'<option value="'+esc(s.code)+'">Шаг '+esc(s.code)+' · '+esc(s.title.slice(0,38))+'</option>').join("");
 function pairHtml(d){
@@ -226,7 +240,7 @@ async function importFile(files){
  }catch(err){errors.push(file.name+": "+String(err.message||err));}
  }
  if(!aggregate.length){message("Загрузка не завершена: "+errors.join(" "));return;}
- state=EMPTY();state.docs=aggregate;state.scope="xlsm";state.distributed=false;persist();render();
+ state=EMPTY();state.docs=aggregate;state.scope="xlsm";state.distributed=false;autoClassify();persist();render();
  message("Импортировано "+aggregate.length+" строк из сопоставленного XLSM. Макросы не запускались. "+errors.join(" "));
 }
 function cell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
@@ -234,7 +248,7 @@ function exportCsv(kind){
  const head=kind==="questions"?["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Статус","Шаг","Вопрос для уточнения"]:
  ["Строка","Код НКНХ","НКНХ","Код ДГП","ДГП","Различие","Комментарий","Путь","Категория","Шаг","Статус","Основание","done","quality","them","next"];
  const list=kind==="questions"?state.docs.filter(d=>!!d.comment||(!d.category&&["missing","ambiguous"].includes(status(d)))):state.docs;
- const rows=[head,...list.map(d=>{const x=edited(d),f=x.flags||{};
+ const rows=[head,...list.map(d=>{const x=edited(d),f=effectiveFlags(d);
  const start=[d.row,d.nCode,d.nName,d.dCode,d.dName,d.comparison,d.comment];
  return kind==="questions"?[...start,statusName(status(d)),x.step||"",(d.comment||"Где в процессе оформляется этот документ, и применим ли он к данному виду работ?")]:
  [...start,d.path,d.category?"Категория":"Документ",x.step||"",statusName(status(d)),x.reason||"",...keys.map(k=>f[k]===1?k:f[k]===0?"нет":"не оценено")];
@@ -261,10 +275,7 @@ el("docs").addEventListener("click",event=>{
  const detail=event.target.closest("[data-details]");
  if(detail){const d=state.docs.find(x=>x.id===detail.dataset.details);if(d)showDetails(d,detail);return;}
  const tagButton=event.target.closest("[data-flag]");
- if(tagButton){const d=state.docs.find(x=>x.id===tagButton.dataset.id);if(!d)return;
- const x=Object.assign({},edited(d).flags||{}),key=tagButton.dataset.flag;
- x[key]=x[key]===undefined?1:x[key]===1?0:undefined;if(x[key]===undefined)delete x[key];
- patch(d,{flags:x});renderDocs();message(key+": "+terms[key]);return;}
+ if(tagButton){event.stopPropagation();showTagDefinition(tagButton.dataset.flag,tagButton);return;}
  const yes=event.target.closest("[data-confirm]");
  if(yes){const d=state.docs.find(x=>x.id===yes.dataset.confirm);if(d){patch(d,{confirmed:true,excluded:false,manual:true});render();}return;}
  const no=event.target.closest("[data-outside]");
@@ -302,10 +313,10 @@ el("distribute").addEventListener("click",distribute);
 el("upload").addEventListener("change",async e=>{await importFile([...e.target.files]);e.target.value=""});
 el("export").addEventListener("click",()=>exportCsv("matrix"));
 el("exportQuestions").addEventListener("click",()=>exportCsv("questions"));
-el("resetDemo").addEventListener("click",()=>{if(state.scope!=="demo"&&!confirm("Заменить загруженный реестр демонстрационными документами? Перед этим сохрани матрицу."))return;state=EMPTY();persist();render()});
+el("resetDemo").addEventListener("click",()=>{if(state.scope!=="demo"&&!confirm("Заменить загруженный реестр демонстрационными документами? Перед этим сохрани матрицу."))return;state=EMPTY();autoClassify();persist();render()});
 el("closeDef").addEventListener("click",()=>el("definition").classList.remove("open"));
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closePopover()});
 document.addEventListener("click",e=>{if(!e.target.closest(".pair-row")&&!e.target.closest("#pairPopover"))closePopover()});
 el("pairPopover").addEventListener("click",e=>{if(e.target.closest(".pop-close"))closePopover()});
-restore();render();
+restore();autoClassify();render();
 })();
