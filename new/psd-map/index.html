@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Распределение ПСД по схеме СМР · NEW</title>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f4f7f9;--card:#fff;--ink:#243643;--muted:#697d89;--line:#dbe5ea;--teal:#317d75;--teal-bg:#e4f4ee;--blue:#357db5;--purple:#825cb1;--amber:#aa7024;--red:#b64b52}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 "Segoe UI",Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}a{color:#246f83;text-decoration:none}a:hover{text-decoration:underline}
+.site-top{position:sticky;top:0;z-index:25;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px max(16px,calc((100vw - 1700px)/2));box-shadow:0 4px 18px #20354c09}
+.site-brand{font-weight:800;white-space:nowrap;font-size:14px}.site-brand small{font-size:10px;font-weight:500;color:var(--muted);margin-left:6px}.site-tabs{display:flex;flex-wrap:wrap;gap:5px}.site-tabs a{font-weight:700;padding:8px 11px;border-radius:7px;color:#576a78}.site-tabs a.active{background:#e6f1f0;color:#206c64}
+main{max-width:1700px;margin:auto;padding:22px 20px 60px}.eyebrow{text-transform:uppercase;font-size:10px;letter-spacing:.09em;color:#65817e;font-weight:800}h1{font-size:24px;letter-spacing:-.025em;line-height:1.25;margin:5px 0 8px}.subtitle{max-width:1100px;font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 15px}
+.intro{display:flex;gap:18px;justify-content:space-between;align-items:end;flex-wrap:wrap;margin:2px 0 18px}.intro-copy{flex:1;min-width:280px}.intro-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.btn{border:1px solid #cbd9df;border-radius:8px;background:white;color:#375363;padding:9px 12px;font-weight:750;white-space:nowrap;transition:background .15s,border-color .15s,transform .15s}.btn:hover{background:#f5fafb;border-color:#9abdc2}.btn.primary{background:#2c7871;border-color:#2c7871;color:#fff}.btn.primary:hover{background:#236a63}.btn.soft{background:#edf5f5;border-color:#c7dedb}.btn.purple{background:#eee8f7;border-color:#cfbfdf;color:#714a9d}.btn.smol{font-size:11px;padding:6px 8px}
+.data-banner{padding:10px 13px;background:#fff9ed;border:1px solid #eddab2;border-radius:9px;display:flex;gap:9px;align-items:center;justify-content:space-between;margin-bottom:14px;font-size:12px}.data-banner.ok{background:#eaf6ee;border-color:#c5ddcf}.data-banner span{flex:1}
+.summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:0 0 16px}.stat{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:11px 13px}.stat span{display:block;color:var(--muted);font-size:10px;font-weight:750}.stat strong{font-weight:800;font-size:24px;line-height:1.3;font-variant-numeric:tabular-nums}
+.app-grid{display:grid;grid-template-columns:minmax(330px,42%) minmax(0,58%);gap:13px;align-items:start}.pane{border:1px solid var(--line);background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 3px 15px #18304407}.pane-head{padding:13px 15px;border-bottom:1px solid var(--line);background:#fbfcfd}.pane-head h2{font-size:15px;letter-spacing:-.01em;margin:0}.pane-head p{font-size:11px;color:var(--muted);margin:4px 0 0}.docpane,.processpane{min-height:580px}
+.filters{padding:12px 14px;border-bottom:1px solid var(--line);display:grid;gap:8px}.inline-filters{display:flex;gap:6px;flex-wrap:wrap}.field{min-height:34px;border:1px solid #cdd9e0;border-radius:7px;padding:8px 10px;background:white;color:var(--ink);min-width:0}.search{width:100%}.field.source,.field.status{flex:1;max-width:100%}.filter-tag{font-weight:800;font-size:11px;padding:5px 8px;border-radius:5px;border:1px dashed #b4c7cf;background:#f6f8fa;color:#56717c}.filter-tag.active{background:#dcece8;border-color:#428f81;color:#205d52}.filter-tag[data-flag="done"].active{background:#e1edff;color:#255d9c;border-color:#8eb7e0}.filter-tag[data-flag="quality"].active{background:#dff3ea;color:#176952;border-color:#9dd5bd}.filter-tag[data-flag="them"].active{background:#fff1d9;color:#91601e;border-color:#e9c78e}.filter-tag[data-flag="next"].active{background:#f0e7fc;color:#7445a9;border-color:#cbb3e5}
+.docs-area{max-height:min(80vh,1100px);overflow:auto;padding:10px}.group{margin:0 0 8px;border:1px solid var(--line);border-radius:9px;overflow:hidden}.group>summary{padding:10px 12px;cursor:pointer;background:#f7f9fa;font-weight:750;display:flex;justify-content:space-between;gap:8px}.group>summary small{color:var(--muted);font-weight:600}.group>summary:hover{background:#edf3f5}.group-content{padding:7px}
+.doc-row{display:block;padding:10px 9px 9px;border:1px solid #e5edf0;border-left:3px solid #90aeb6;border-radius:8px;margin:0 0 7px;background:white;transition:background .12s}.doc-row.source-НКНХ{border-left-color:#4288b9}.doc-row.source-ДГП{border-left-color:#b88458}.doc-row:hover{background:#fafdff}.doc-row.selected{outline:2px solid #89c2b5}.doc-head{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.doc-name{font-size:12px;font-weight:730;margin:5px 0;overflow-wrap:anywhere}.doc-path{font-size:10px;color:var(--muted);max-height:40px;overflow:hidden}.mini{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;background:#edf1f3;color:#61727b}.mini.code{background:#eef3fa;color:#5f7794}.mini.N{background:#e4eef8;color:#306894}.mini.D{background:#fcf1e3;color:#956b36}.mini.status{margin-left:auto}.mini.status.proposed{background:#e6f3e9;color:#3a7256}.mini.status.confirmed{background:#d9f3ea;color:#1a7558}.mini.status.missing{background:#fff0e8;color:#a55a35}.mini.status.ambiguous{background:#f4edfa;color:#805da3}
+.flags{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0 2px}.flag{border:1px solid;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:800;background:white;cursor:pointer;line-height:1.55;text-decoration:underline dotted;text-underline-offset:3px}.flag[data-v="?"]{border-color:#d4dce1;background:#f9fafb;color:#8b9ba5;text-decoration:none}.flag[data-v="0"]{border-color:#e0e4e7;background:#f6f7f8;color:#aab2b7;text-decoration:none}.flag[data-v="1"][data-k="done"]{background:#e5efff;border-color:#a4c4ec;color:#2860a1}.flag[data-v="1"][data-k="quality"]{background:#e1f4e9;border-color:#a9d9c2;color:#186b54}.flag[data-v="1"][data-k="them"]{background:#fff2dc;border-color:#efd3a2;color:#9a661c}.flag[data-v="1"][data-k="next"]{background:#f3eafb;border-color:#d7beeb;color:#7346a9}
+.doc-bottom{display:flex;gap:7px;margin-top:7px;align-items:center;flex-wrap:wrap}.doc-bottom select{font-size:10px;padding:6px 7px;max-width:100%;flex:1;min-width:100px}.doc-bottom button{padding:5px 7px}.note-status{font-size:10px;color:var(--muted)}.empty{padding:30px 18px;color:var(--muted);font-size:12px;text-align:center}
+.process-toolbar{padding:10px 13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line)}.process-toolbar .hint{color:var(--muted);font-size:11px;flex:1}
+.diagram-area{max-height:min(80vh,1100px);overflow:auto;padding:15px}.phase{border:1px solid #dfe6eb;border-radius:11px;margin:0 0 11px;padding:11px;background:#fbfcfd;position:relative}.phase+.phase:before{content:"↓";position:absolute;top:-21px;left:calc(50% - 8px);font-size:17px;color:#7faeae}.phase h3{font-size:10px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;color:#67818c;margin:0 0 9px}
+.node-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.node{border:1px solid #dae4e7;border-left:4px solid #87acb5;background:#fff;border-radius:8px;padding:10px;text-align:left;position:relative;min-width:0}.node:hover{border-color:#92bfbd}.node.current{outline:2px solid #258a7d}.node-head{display:flex;justify-content:space-between;gap:6px}.node-num{font-weight:850;font-size:10px;color:#3c6069}.node-count{font-weight:900;font-size:10px;background:#e7f4ef;color:#27715e;border-radius:5px;padding:3px 5px;white-space:nowrap}.node-title{font-size:11px;font-weight:730;line-height:1.42;margin:5px 0 0}.node .node-sample{margin:8px 0 0;border-top:1px dashed #d6e0e5;padding-top:5px;color:#56727b;font-size:10px}.node.empty-node{opacity:.8;background:#fafbfc}.node-target{animation:nodeglow 1s ease}.step-info{margin:10px 0 0;padding:10px 12px;border:1px solid #bfd9d8;background:#f0f8f7;border-radius:8px}.step-info h4{margin:0 0 4px;font-size:12px}.step-info p{font-size:11px;color:#61757a;margin:4px 0}.step-list{display:flex;gap:4px;flex-wrap:wrap}.step-pill{border:1px solid #d5e2e8;background:#fff;border-radius:5px;padding:3px 6px;font-size:10px}
+.gap-panel{border-top:1px solid var(--line);padding:12px 15px;background:#fff9f4}.gap-panel h3{font-size:13px;margin:0 0 5px}.gap-panel p{font-size:11px;color:#7d6c62;margin:0 0 6px}.gap-samples{display:flex;flex-wrap:wrap;gap:5px}.gap-samples button{font-size:10px;border:1px solid #edcebb;border-radius:5px;background:#fff;padding:4px 7px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.definition{position:fixed;z-index:1000;max-width:345px;width:calc(100vw - 24px);border:1px solid #d2dde2;background:white;box-shadow:0 15px 40px #15293625;border-radius:11px;padding:14px 16px;display:none;font-size:12px;line-height:1.6}.definition.open{display:block}.definition h4{margin:0 0 7px;font-size:13px}.definition p{margin:0}.definition button{float:right;border:0;background:none;color:#768791}
+.fly{position:fixed;z-index:600;pointer-events:none;border:1px solid #8cbcb1;background:#e4f4ed;color:#236c60;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 9px;border-radius:6px;font-size:11px;font-weight:750;box-shadow:0 9px 25px #15423820}
+.help{padding:12px 0;margin-top:8px;color:#5e7785;font-size:11px}.help strong{color:#3b5a69}.state-msg{min-height:23px;color:#315b60;font-size:11px}
+@keyframes nodeglow{0%{box-shadow:0 0 0 0 #86c8b5a0}50%{box-shadow:0 0 0 6px #86c8b530}100%{box-shadow:none}}
+@media(max-width:1000px){.app-grid{grid-template-columns:1fr}.docs-area,.diagram-area{max-height:none}.summary{grid-template-columns:repeat(3,minmax(0,1fr))}.site-top{flex-wrap:wrap}}
+@media(max-width:600px){main{padding:15px 10px 45px}.site-top{padding:9px 10px}.site-brand small{display:none}.site-tabs a{padding:6px 8px;font-size:11px}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.stat strong{font-size:20px}.node-grid{grid-template-columns:1fr}.intro h1{font-size:20px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="site-top">
+<div class="site-brand">СИД · NEW <small>Матрица ПСД · v2026.11.17.2159</small></div>
+<nav class="site-tabs" aria-label="Разделы NEW"><a href="../">Схема СМР</a><a href="../?protocol=1">Протокол</a><a class="active" href="./" aria-current="page">Распределение ПСД</a></nav>
+</header>
+<main>
+<div class="intro">
+  <div class="intro-copy">
+    <div class="eyebrow">Гипотезы распределения · не утверждённая схема</div>
+    <h1>Где в процессе появляется каждый документ ПСД?</h1>
+    <p class="subtitle">Слева исходный перечень НКНХ / ДГП, справа 35 шагов текущей схемы. «Распределить» предлагает соответствия, но не утверждает их. Не сопоставленные документы остаются кандидатами на пропущенные действия, а не доказанными ошибками процесса.</p>
+  </div>
+  <div class="intro-actions">
+    <label class="btn soft" for="upload" tabindex="0">Загрузить перечень ПСД <input type="file" id="upload" accept=".xlsx,.xls,.csv,.tsv" multiple hidden></label>
+    <button class="btn primary" id="distribute" type="button">Распределить по шагам</button>
+    <button class="btn" id="export" type="button">Экспорт матрицы CSV</button>
+    <button class="btn" id="exportQuestions" type="button">Вопросы по пробелам</button>
+  </div>
+</div>
+<div id="banner" class="data-banner"><span id="bannerText">Демонстрационный набор из общедоступных названий актов. Для проверки полного перечня загрузи локально Excel ПСД.</span><button type="button" class="btn smol" id="resetDemo">Демо</button></div>
+<div class="summary">
+  <div class="stat"><span>Строк документов</span><strong id="countAll">0</strong></div>
+  <div class="stat"><span>Привязано к шагам</span><strong id="countPlaced">0</strong></div>
+  <div class="stat"><span>Не найден шаг</span><strong id="countMissing">0</strong></div>
+  <div class="stat"><span>Неоднозначно</span><strong id="countAmbiguous">0</strong></div>
+  <div class="stat"><span>Проверено вручную</span><strong id="countConfirmed">0</strong></div>
+</div>
+<div class="app-grid">
+  <section class="pane docpane" aria-label="Исходный перечень ПСД">
+    <div class="pane-head"><h2>01 · Документы ПСД</h2><p>Одна запись = один документ конкретного перечня и кода. Названия сохраняются из источника.</p></div>
+    <div class="filters">
+      <input class="field search" id="search" type="search" placeholder="Название, код, полный путь или вид работ…">
+      <div class="inline-filters">
+        <select id="sourceFilter" class="field source" aria-label="Источник"><option value="">Обе площадки</option><option value="НКНХ">НКНХ</option><option value="ДГП">ДГП</option></select>
+        <select id="statusFilter" class="field status" aria-label="Статус сопоставления"><option value="">Все статусы</option><option value="proposed">Предложено</option><option value="confirmed">Подтверждено</option><option value="missing">Без шага</option><option value="ambiguous">Несколько шагов</option><option value="outside">Вне рассматриваемого процесса</option><option value="pending">Не распределено</option></select>
+      </div>
+      <div class="inline-filters" aria-label="Фильтр по функциям ИД">
+        <button type="button" class="filter-tag" data-filter="done" data-flag="done">done</button>
+        <button type="button" class="filter-tag" data-filter="quality" data-flag="quality">quality</button>
+        <button type="button" class="filter-tag" data-filter="them" data-flag="them">them</button>
+        <button type="button" class="filter-tag" data-filter="next" data-flag="next">next</button>
+        <button type="button" class="filter-tag" id="unmarked">Не размечено</button>
+      </div>
+      <div id="filterCount" class="note-status" aria-live="polite"></div>
+    </div>
+    <div class="docs-area" id="docs"></div>
+  </section>
+  <section class="pane processpane" aria-label="Схема распределения документов">
+    <div class="pane-head"><h2>02 · Схема процесса</h2><p>Шаги отражают модель СМР; внутри показаны связанные документы. Нажми шаг, чтобы посмотреть привязки.</p></div>
+    <div class="process-toolbar">
+      <button type="button" id="clearFocus" class="btn smol">Все шаги</button>
+      <button type="button" id="resetMapping" class="btn smol">Сбросить предложения</button>
+      <span class="hint" id="currentFocus">Показаны все 35 шагов</span>
+    </div>
+    <div class="diagram-area" id="diagram"></div>
+    <div class="gap-panel" id="gapPanel"><h3>Кандидаты на пробелы в схеме</h3><p id="gapExplain">Распредели документы, чтобы увидеть, для каких записей не нашлось очевидного шага.</p><div class="gap-samples" id="gapSamples"></div></div>
+  </section>
+</div>
+<div class="help"><strong>Как интерпретировать:</strong> предложения алгоритма не подтверждают нормативную применимость и не доказывают полноту схемы. Знаки <strong>?</strong> у функций ИД означают «ещё не оценено», а не «не применимо». Все загруженные документы и решения хранятся локально в твоём браузере, не отправляются на сервер.</div>
+<div class="state-msg" id="message" aria-live="polite"></div>
+</main>
+<div id="definition" class="definition" role="dialog" aria-label="Определение функции ИД" aria-modal="false"><button type="button" id="closeDef" aria-label="Закрыть пояснение">×</button><h4 id="defHeading"></h4><p id="defText"></p></div>
+<script id="seed-steps" type="application/json">[{"code":"0","title":"До начала СМР: заключения, утверждение ПД и РНС","actor":"Заказчик","layer":0,"output":"Выход\n• [ИРД] Положительное заключение ГГЭ\n• [ИРД] Положительное заключение ГЭЭ (если необходимо)\n• [ОРД] Приказ об утверждении ПД и приказ/решение об утверждении результатов ГГЭ\n• [ПД] Утверждённая проектная документация\n• [ИРД] Разрешение на строительство"},{"code":"1","title":"Выдача РД «В производство работ», утверждение перечня ИД и формы её ведения","actor":"Заказчик","layer":1,"output":"Выход\n• [РД] РД со штампом «В производство работ», переданная ЛОС\n• [Организационный документ] Утверждённый перечень ИД и форма её ведения\n• [ОРД] Приказы заказчика о представителях СК, застройщика и технического заказчика\n• [ОРД] Приказ эксплуатирующей организации о представителях для АОУСИТО и других документов СМР и ПНР"},{"code":"2","title":"Извещение о начале работ в ГСН (не позднее 7 раб. дн.)","actor":"Заказчик","layer":2,"output":"Выход\n• [Надзорный документ] Направленное извещение о начале строительства\n• [ИД] ОЖР, переданный на регистрацию"},{"code":"3","title":"Организация авторского надзора","actor":"Проектировщик","layer":2,"output":"Выход\n• [ОРД] Приказ о специалистах авторского надзора\n• [Журнал авторского надзора] Открытый генпроектировщиком ЖАН"},{"code":"4а","title":"ППР, ППГР, назначение ответственных, открытие журналов","actor":"Лицо, осуществляющее строительство","layer":2,"output":"Выход\n• [ОТД] Разработанный ППР.\n• [ОТД] Разработанные технологические карты.\n• [ОТД] Разработанный ППГР, если применимо."},{"code":"4в","title":"ППР, ППГР, назначение ответственных, открытие журналов","actor":"Лицо, осуществляющее строительство","layer":2,"output":"Выход\n• [ОРД] Подписанные приказы о назначении ответственных лиц, загруженные в СИД.\n• [ОРД] Документы, подтверждающие полномочия назначенных сотрудников, загруженные в СИД.\n• [Квалификационная документация] Документы, подтверждающие квалификацию назначенных сотрудников, загруженные в СИД."},{"code":"7","title":"Передача геодезической разбивочной основы","actor":"Заказчик","layer":2,"output":"Выход\n• [ИД] Акт освидетельствования ГРО (ИД 1)"},{"code":"8","title":"Передача давальческого оборудования в монтаж","actor":"Заказчик","layer":2,"output":"Выход\n• [Учётный документ] Акт приёма-передачи оборудования в монтаж (ОС-15)\n• [Учётный документ] Накладная на передачу давальческих материалов подрядчику (М-15 либо иной документ по принятой форме)"},{"code":"11","title":"Поставка МТР и оборудования с документами качества","actor":"Поставщик / изготовитель","layer":2,"output":"Выход\n• [Документация поставщика] Переданные паспорта, сертификаты, декларации, формуляры и инструкции"},{"code":"6","title":"Регистрация общего журнала, программа проверок","actor":"Орган государственного строительного надзора","layer":3,"output":"Выход\n• [ИД] Зарегистрированный ОЖР (ОЖР с регистрационной надписью и печатью ГСН)\n• [Надзорный документ] Программа проверок"},{"code":"4б","title":"ППР, ППГР, назначение ответственных, открытие журналов","actor":"Лицо, осуществляющее строительство","layer":3,"output":"Выход\n• [ОТД] Согласованные ППР и технологические карты; при наличии замечаний - перечень замечаний для доработки."},{"code":"4г","title":"ППР, ППГР, назначение ответственных, открытие журналов","actor":"Лицо, осуществляющее строительство","layer":3,"output":"Выход\n• [ИД → Журналы работ → СЖР] Подготовленные и зарегистрированные специальные журналы работ.\n• [ИД → ОЖР → Раздел 2] Сведения о специальных журналах работ для включения в раздел 2 соответствующего ОЖР."},{"code":"5","title":"Проверка документов и допуск персонала и лабораторий к работам","actor":"Лицо, осуществляющее строительство","layer":3,"output":"Выход\n• [Документ допуска] Оформленный акт-допуск, если требуется\n• [Документ допуска] Чек-лист допуска лаборатории с результатом проверки, если применяется\n• [Подтверждающие документы] Проверенные документы о квалификации работников, аттестации технологий и компетентности лаборатории"},{"code":"9","title":"Разбивка осей, вынос в натуру","actor":"Лицо, осуществляющее строительство","layer":3,"output":"Выход\n• [ИД] Акт разбивки осей (ИД 2)"},{"code":"10","title":"Входной контроль МТР и оборудования (с СК заказчика)","actor":"Лицо, осуществляющее строительство","layer":3,"output":"Выход\n• [ИД] Журнал и акты входного контроля (ИД 12)\n• [Документ контроля] Акты о выявленных дефектах (при наличии)"},{"code":"16","title":"Выполнение СМР по РД и ППР, записи в журналах","actor":"Лицо, осуществляющее строительство","layer":4,"output":"Выход\n• [ИД] Записи о выполненных работах в ОЖР и СЖР, если применимо"},{"code":"12","title":"Строительный контроль заказчика: выборочная проверка в ходе СМР","actor":"Заказчик","layer":4,"output":"Выход\n• [Документ контроля] Оформленные замечания и предписания, если выявлены нарушения\n• [ИД] Записи в ОЖР о проверке и устранении замечаний, если применимо"},{"code":"13","title":"Авторский надзор, согласование отступлений от РД","actor":"Проектировщик","layer":4,"output":"Выход\n• [Журнал авторского надзора] Записи в ЖАН\n• [РД] Согласованные изменения РД"},{"code":"17","title":"Выездная проверка Ростехнадзора по программе","actor":"Орган государственного строительного надзора","layer":4,"output":"Выход\n• [Надзорный документ] Акт проверки Ростехнадзора\n• [Надзорный документ] Отдельное предписание Ростехнадзора, если выдано"},{"code":"14","title":"Исполнительная съёмка и лабораторный контроль","actor":"Лицо, осуществляющее строительство","layer":4,"output":"Выход\n• [ИД] Исполнительные геодезические схемы (ИД 8), если применимо\n• [ИД] Исполнительные схемы и профили (ИД 9), если предусмотрены\n• [ИД] Протоколы ЛНК, СТЛ и ЭТЛ (ИД 11), если применимо"},{"code":"15","title":"Подготовка комплекта документов и инициирование приёмочной инспекции","actor":"Лицо, осуществляющее строительство","layer":5,"output":"Выход\n• [Комплект документов] Материалы для приёмочной инспекции на предъявляемый объём работ\n• [Проект ИД] Проект акта с приложениями, если подготовлен\n• [Организационный документ] Уведомление необходимых участников приёмочной инспекции"},{"code":"18","title":"Приёмочная инспекция предъявленного объёма работ","actor":"Участники строительства","layer":6,"output":"Выход\n• [Документ инспекции] Заключение о результате приёмочной инспекции (форма 4, в том числе цифровая)\n• [ИД] АОСР, АОСК, АОУСИТО по применимости к виду работ\n• [Документ приёмки] Акт приёмки выполненных работ или акт промежуточной приёмки ответственных конструкций, если предусмотрен перечнем ПСД для данного вида работ\n• [ИД] Акты испытаний технологических трубопроводов на прочность и герметичность, если требуются\n• [ИД] Акты промывки и продувки технологических трубопроводов, если требуются\n• [ИД] Акты испытаний нетехнологических трубопроводов на прочность и герметичность, если требуются\n• [ИД] Акты очистки нетехнологических трубопроводов, включая очистку поршнями, если требуется\n• [Документ качества монтажа] Свидетельство о монтаже или удостоверение о качестве монтажа технологических трубопроводов, если предусмотрено применимой нормативной документацией\n• [Документ контроля] Оформленные замечания и предписания, документы о выполнении мероприятий по устранению, если составлялись\n• [Акты приёмки по видам работ] Акты приёмки оснований, скважин и свай (земляные и свайные работы)\n• [Акты приёмки по видам работ] Акты приёмки выполненных отделочных работ, защитных и изоляционных покрытий\n• [Акты приёмки по видам работ] Акты приёмки инженерных систем, трубопроводов и участков сетей\n• [Акты приёмки по видам работ] Акты приёмки строительных и металлических конструкций, резервуаров и крановых путей\n• [Акты приёмки по видам работ] Акты приёмки и сдачи электромонтажных работ и специальных защитных систем"},{"code":"21","title":"Внутритрубная диагностика нетехнологических трубопроводов","actor":"Лицо, осуществляющее строительство","layer":7,"output":"Выход\n• [Техническая документация] Технический отчёт внутритрубной диагностики, если она проводилась\n• [ИД] Дополнительный комплект документов по устранению дефектов, если дефекты выявлялись"},{"code":"22","title":"Индивидуальные испытания оборудования","actor":"Поставщик / изготовитель","layer":7,"output":"Выход\n• [ИД] Акт индивидуальных испытаний оборудования при положительном результате\n• [Документ контроля] Оформленные замечания и предписания по результатам испытаний, если выдавались\n• [Подтверждающие документы] Документы об устранении препятствующих недостатков, если такие недостатки выявлялись"},{"code":"20","title":"Комплектование ИД по титулам и системам","actor":"Лицо, осуществляющее строительство","layer":8,"output":"Выход\n• [ИД] Комплект ИД по титулам и системам\n• [ИД] Рабочие чертежи с надписями о соответствии (ИД 7)\n• [Организационный документ] Реестр ИД и сопроводительное письмо"},{"code":"19","title":"Проверка комплекта ИД, выдача замечаний","actor":"Заказчик","layer":9,"output":"Выход\n• [Документ контроля] Реестр замечаний по ИД при их наличии\n• [ИД] Проверенный комплект ИД при отсутствии замечаний"},{"code":"23","title":"Рабочая комиссия: приёмка после индивидуальных испытаний","actor":"Заказчик","layer":10,"output":"Выход\n• [Приёмочная документация] Акт приёмки для комплексного опробования"},{"code":"26","title":"Шеф-наладка при комплексном опробовании","actor":"Поставщик / изготовитель","layer":11,"output":"Выход\n• [Пусконаладочная документация] Протоколы наладки"},{"code":"27","title":"Комплексное опробование (ПНР под нагрузкой)","actor":"Эксплуатирующая организация","layer":11,"output":"Выход\n• [Пусконаладочная документация] Акт комплексного опробования\n• [Пусконаладочная документация] Протоколы ПНР"},{"code":"25","title":"Предъявление объекта, устранение недоделок","actor":"Лицо, осуществляющее строительство","layer":12,"output":"Выход\n• [Учётная документация] КС-2, КС-3\n• [Документ контроля] Ведомость недоделок"},{"code":"24","title":"Приёмка объекта, извещение об окончании в ГСН","actor":"Заказчик","layer":13,"output":"Выход\n• [Приёмочная документация] Акт приёмки ОКС\n• [Надзорный документ] Извещение об окончании работ"},{"code":"28","title":"Итоговая проверка и получение ЗОС","actor":"Орган государственного строительного надзора","layer":14,"output":"Выход\n• [Надзорный документ] ЗОС либо отказ в выдаче ЗОС"},{"code":"29","title":"Передача ИД на постоянное хранение","actor":"Лицо, осуществляющее строительство","layer":15,"output":"Выход\n• [ИД] Комплект ИД передан на постоянное хранение\n• [Организационный документ] Акт передачи ИД"},{"code":"30","title":"Получение разрешения на ввод в эксплуатацию","actor":"Заказчик","layer":15,"output":"Выход\n• [Разрешительная документация] Разрешение на ввод в эксплуатацию либо решение об отказе"},{"code":"31","title":"Хранение ИД в течение срока эксплуатации, регистрация ОПО","actor":"Эксплуатирующая организация","layer":16,"output":"Выход\n• [ИД] Архив ИД на срок эксплуатации\n• [Регистрационная документация] Сведения в реестре ОПО"}]</script>
+<script id="seed-docs" type="application/json">[{"id":"demo-НКНХ-0","source":"НКНХ","code":"01.03.04.01.01","name":"Акт освидетельствования скрытых работ (АОСР, пример для бетонных работ)","path":"Общие акты","demo":true},{"id":"demo-ДГП-0","source":"ДГП","code":"01.03.04.01.01","name":"Акт освидетельствования скрытых работ (АОСР, пример для бетонных работ)","path":"Общие акты","demo":true},{"id":"demo-НКНХ-1","source":"НКНХ","code":"02.01.01.04","name":"Акт освидетельствования ответственных строительных конструкций (АОСК)","path":"Общие акты","demo":true},{"id":"demo-ДГП-1","source":"ДГП","code":"02.01.01.04","name":"Акт освидетельствования ответственных строительных конструкций (АОСК)","path":"Общие акты","demo":true},{"id":"demo-НКНХ-2","source":"НКНХ","code":"01.11.01.04.06","name":"Акт освидетельствования участков сетей инженерно-технического обеспечения (АОУСИТО)","path":"Общие акты","demo":true},{"id":"demo-ДГП-2","source":"ДГП","code":"01.12.01.06.09","name":"Акт освидетельствования участков сетей инженерно-технического обеспечения (АОУСИТО)","path":"Общие акты","demo":true},{"id":"demo-НКНХ-3","source":"НКНХ","code":"01.14.02.03","name":"Акт промежуточной приёмки ответственных конструкций","path":"Общие акты","demo":true},{"id":"demo-ДГП-3","source":"ДГП","code":"01.14.02.03","name":"Акт промежуточной приёмки ответственных конструкций","path":"Общие акты","demo":true},{"id":"demo-НКНХ-4","source":"НКНХ","code":"01.01.06.02","name":"Акт приёмки оснований","path":"Земляные и свайные","demo":true},{"id":"demo-ДГП-4","source":"ДГП","code":"01.01.05.02","name":"Акт приёмки оснований","path":"Земляные и свайные","demo":true},{"id":"demo-НКНХ-5","source":"НКНХ","code":"01.02.02.02.02","name":"Акт освидетельствования и приёмки скважины сваи","path":"Земляные и свайные","demo":true},{"id":"demo-ДГП-5","source":"ДГП","code":"01.02.02.01.01","name":"Акт освидетельствования и приёмки скважины сваи","path":"Земляные и свайные","demo":true},{"id":"demo-НКНХ-6","source":"НКНХ","code":"01.02.02.02.04","name":"Акт освидетельствования и приёмки сваи","path":"Земляные и свайные","demo":true},{"id":"demo-ДГП-6","source":"ДГП","code":"01.02.02.02.03","name":"Акт освидетельствования и приёмки сваи","path":"Земляные и свайные","demo":true},{"id":"demo-НКНХ-7","source":"НКНХ","code":"01.06.01.02","name":"Акт приёмки выполненных работ по перегородкам и стенам","path":"Отделочные работы","demo":true},{"id":"demo-ДГП-7","source":"ДГП","code":"01.06.01.02","name":"Акт приёмки выполненных работ по перегородкам и стенам","path":"Отделочные работы","demo":true},{"id":"demo-НКНХ-8","source":"НКНХ","code":"01.06.02.02","name":"Акт приёмки выполненных работ по устройству полов","path":"Отделочные работы","demo":true},{"id":"demo-ДГП-8","source":"ДГП","code":"01.06.02.02","name":"Акт приёмки выполненных работ по устройству полов","path":"Отделочные работы","demo":true},{"id":"demo-НКНХ-9","source":"НКНХ","code":"01.06.03.02","name":"Акт приёмки выполненных работ по устройству потолков","path":"Отделочные работы","demo":true},{"id":"demo-ДГП-9","source":"ДГП","code":"01.06.03.02","name":"Акт приёмки выполненных работ по устройству потолков","path":"Отделочные работы","demo":true},{"id":"demo-НКНХ-10","source":"НКНХ","code":"01.11.01.04.11","name":"Акт приёмки внутренних систем хозяйственного и горячего водоснабжения","path":"Инженерные системы","demo":true},{"id":"demo-ДГП-10","source":"ДГП","code":"01.11.01.04.11","name":"Акт приёмки внутренних систем хозяйственного и горячего водоснабжения","path":"Инженерные системы","demo":true},{"id":"demo-НКНХ-11","source":"НКНХ","code":"01.11.01.04.12","name":"Акт приёмки системы и выпусков внутренней канализации","path":"Инженерные системы","demo":true},{"id":"demo-ДГП-11","source":"ДГП","code":"01.11.01.04.12","name":"Акт приёмки системы и выпусков внутренней канализации","path":"Инженерные системы","demo":true},{"id":"demo-НКНХ-12","source":"НКНХ","code":"01.11.01.04.13","name":"Акт приёмки системы и выпусков водостока здания","path":"Инженерные системы","demo":true},{"id":"demo-ДГП-12","source":"ДГП","code":"01.11.01.04.13","name":"Акт приёмки системы и выпусков водостока здания","path":"Инженерные системы","demo":true},{"id":"demo-НКНХ-13","source":"НКНХ","code":"01.11.01.04.14","name":"Акт приёмки защитного покрытия тепловых сетей","path":"Инженерные системы","demo":true},{"id":"demo-ДГП-13","source":"ДГП","code":"01.11.01.04.14","name":"Акт приёмки защитного покрытия тепловых сетей","path":"Инженерные системы","demo":true},{"id":"demo-НКНХ-14","source":"НКНХ","code":"01.11.01.04.08","name":"Акт технической готовности систем отопления (посистемно)","path":"Инженерные системы","demo":true},{"id":"demo-ДГП-14","source":"ДГП","code":"01.11.01.04.08","name":"Акт технической готовности систем отопления (посистемно)","path":"Инженерные системы","demo":true},{"id":"demo-НКНХ-15","source":"НКНХ","code":"01.13.05.02","name":"Акт приёмки трубопровода владельцем от монтажной организации","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-ДГП-15","source":"ДГП","code":"01.13.05.02","name":"Акт приёмки трубопровода владельцем от монтажной организации","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-НКНХ-16","source":"НКНХ","code":"01.14.04.05","name":"Акт приёмки перехода газопровода, выполненного способом наклонно-направленного бурения","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-ДГП-16","source":"ДГП","code":"01.14.04.05","name":"Акт приёмки перехода газопровода, выполненного способом наклонно-направленного бурения","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-НКНХ-17","source":"НКНХ","code":"01.12.01.06.01","name":"Акт приёмочного гидравлического/пневматического испытания напорного трубопровода","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-ДГП-17","source":"ДГП","code":"01.12.01.06.01","name":"Акт приёмочного гидравлического/пневматического испытания напорного трубопровода","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-НКНХ-18","source":"НКНХ","code":"01.12.01.06.02","name":"Акт приёмочного гидравлического испытания безнапорного трубопровода","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-ДГП-18","source":"ДГП","code":"01.12.01.06.02","name":"Акт приёмочного гидравлического испытания безнапорного трубопровода","path":"Наружные сети и трубопроводы","demo":true},{"id":"demo-НКНХ-19","source":"НКНХ","code":"02.01.01.04","name":"Акт освидетельствования строительных/ответственных металлоконструкций","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-ДГП-19","source":"ДГП","code":"02.01.01.04","name":"Акт освидетельствования строительных/ответственных металлоконструкций","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-НКНХ-20","source":"НКНХ","code":"02.01.01.05","name":"Акт освидетельствования подкрановых балок и рельсов","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-ДГП-20","source":"ДГП","code":"02.01.01.05","name":"Акт освидетельствования подкрановых балок и рельсов","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-НКНХ-21","source":"НКНХ","code":"02.02.02.08","name":"Акт приёмки защитного покрытия","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-ДГП-21","source":"ДГП","code":"02.05.03.01","name":"Акт приёмки защитного покрытия","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-НКНХ-22","source":"НКНХ","code":"02.05.05.01","name":"Акт приёмки выполненных изоляционных работ","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-ДГП-22","source":"ДГП","code":"02.05.05.01","name":"Акт приёмки выполненных изоляционных работ","path":"Металлоконструкции и защитные покрытия","demo":true},{"id":"demo-НКНХ-23","source":"НКНХ","code":"02.04.01.02.02.01.02.01","name":"Акт на приёмку основания и фундаментов резервуара под монтаж","path":"Резервуары","demo":true},{"id":"demo-ДГП-23","source":"ДГП","code":"02.04.01.02.02.01.02.01","name":"Акт на приёмку основания и фундаментов резервуара под монтаж","path":"Резервуары","demo":true},{"id":"demo-НКНХ-24","source":"НКНХ","code":"02.04.01.02.02.01.02.02","name":"Акт приёмки металлоконструкций резервуара для сборки","path":"Резервуары","demo":true},{"id":"demo-ДГП-24","source":"ДГП","code":"02.04.01.02.02.01.02.02","name":"Акт приёмки металлоконструкций резервуара для сборки","path":"Резервуары","demo":true},{"id":"demo-НКНХ-25","source":"НКНХ","code":"02.04.01.02.02.01.06.03","name":"Акт на приёмку резервуара","path":"Резервуары","demo":true},{"id":"demo-ДГП-25","source":"ДГП","code":"02.04.01.02.02.01.06.03","name":"Акт на приёмку резервуара","path":"Резервуары","demo":true},{"id":"demo-НКНХ-26","source":"НКНХ","code":"02.06.01.01.01","name":"Акт промежуточной приёмки ответственных конструкций (балок кранового пути)","path":"Крановые пути","demo":true},{"id":"demo-ДГП-26","source":"ДГП","code":"02.06.01.01.01","name":"Акт промежуточной приёмки ответственных конструкций (балок кранового пути)","path":"Крановые пути","demo":true},{"id":"demo-НКНХ-27","source":"НКНХ","code":"02.06.01.02.02","name":"Акт приёмки кранового пути под монтаж крана","path":"Крановые пути","demo":true},{"id":"demo-ДГП-27","source":"ДГП","code":"02.06.01.02.02","name":"Акт приёмки кранового пути под монтаж крана","path":"Крановые пути","demo":true},{"id":"demo-НКНХ-28","source":"НКНХ","code":"02.06.01.03.06","name":"Акт сдачи-приёмки заземления кранового пути","path":"Крановые пути","demo":true},{"id":"demo-ДГП-28","source":"ДГП","code":"02.06.01.03.06","name":"Акт сдачи-приёмки заземления кранового пути","path":"Крановые пути","demo":true},{"id":"demo-НКНХ-29","source":"НКНХ","code":"02.06.02.01.01","name":"Акт сдачи-приёмки земляного полотна под устройство кранового пути","path":"Крановые пути","demo":true},{"id":"demo-ДГП-29","source":"ДГП","code":"02.06.02.01.01","name":"Акт сдачи-приёмки земляного полотна под устройство кранового пути","path":"Крановые пути","demo":true},{"id":"demo-НКНХ-30","source":"НКНХ","code":"03.01.01.02.03","name":"Акт приёмки траншей, каналов, туннелей и блоков под монтаж кабелей","path":"Электромонтажные работы","demo":true},{"id":"demo-ДГП-30","source":"ДГП","code":"03.01.01.02.03","name":"Акт приёмки траншей, каналов, туннелей и блоков под монтаж кабелей","path":"Электромонтажные работы","demo":true},{"id":"demo-НКНХ-31","source":"НКНХ","code":"03.02.01.03.01","name":"Акт приёмки электромонтажных работ","path":"Электромонтажные работы","demo":true},{"id":"demo-ДГП-31","source":"ДГП","code":"03.02.01.03.01","name":"Акт приёмки электромонтажных работ","path":"Электромонтажные работы","demo":true},{"id":"demo-НКНХ-32","source":"НКНХ","code":"03.02.02.03.01","name":"Акт сдачи-приёмки электромонтажных работ","path":"Электромонтажные работы","demo":true},{"id":"demo-ДГП-32","source":"ДГП","code":"03.02.02.03.01","name":"Акт сдачи-приёмки электромонтажных работ","path":"Электромонтажные работы","demo":true},{"id":"demo-НКНХ-33","source":"НКНХ","code":"03.02.04.03.01","name":"Акт приёмки и сдачи электромонтажных работ","path":"Электромонтажные работы","demo":true},{"id":"demo-ДГП-33","source":"ДГП","code":"03.02.04.03.01","name":"Акт приёмки и сдачи электромонтажных работ","path":"Электромонтажные работы","demo":true},{"id":"demo-НКНХ-34","source":"НКНХ","code":"03.02.01.01.03","name":"Акт приёмки контактных устройств, электроперемычек, опорных и контрольных пунктов","path":"Специальные защитные системы","demo":true},{"id":"demo-ДГП-34","source":"ДГП","code":"03.02.01.01.03","name":"Акт приёмки контактных устройств, электроперемычек, опорных и контрольных пунктов","path":"Специальные защитные системы","demo":true},{"id":"demo-НКНХ-35","source":"НКНХ","code":"03.02.01.01.04","name":"Акт приёмки установленных электроизолирующих соединений","path":"Специальные защитные системы","demo":true},{"id":"demo-ДГП-35","source":"ДГП","code":"03.02.01.01.04","name":"Акт приёмки установленных электроизолирующих соединений","path":"Специальные защитные системы","demo":true},{"id":"demo-НКНХ-36","source":"НКНХ","code":"03.02.04.01.04","name":"Акт приёмки строительно-монтажных работ гальванической (протекторной) защиты","path":"Специальные защитные системы","demo":true},{"id":"demo-ДГП-36","source":"ДГП","code":"03.02.04.01.04","name":"Акт приёмки строительно-монтажных работ гальванической (протекторной) защиты","path":"Специальные защитные системы","demo":true},{"id":"demo-НКНХ-37","source":"НКНХ","code":"03.02.03.03.01","name":"Акт освидетельствования электромонтажных работ по устройствам электрохимической защиты","path":"Специальные защитные системы","demo":true},{"id":"demo-ДГП-37","source":"ДГП","code":"03.02.03.03.01","name":"Акт освидетельствования электромонтажных работ по устройствам электрохимической защиты","path":"Специальные защитные системы","demo":true},{"id":"demo-НКНХ-38","source":"НКНХ","code":"02.06.03.03.02","name":"Акт приёмки лифта","path":"Специальные работы","demo":true},{"id":"demo-ДГП-38","source":"ДГП","code":"02.06.03.03.02","name":"Акт приёмки лифта","path":"Специальные работы","demo":true},{"id":"demo-НКНХ-39","source":"НКНХ","code":"02.06.03.03.13","name":"Акт технического освидетельствования лифта","path":"Специальные работы","demo":true},{"id":"demo-ДГП-39","source":"ДГП","code":"02.06.03.03.13","name":"Акт технического освидетельствования лифта","path":"Специальные работы","demo":true}]</script>
+<script>
+(function(){
+"use strict";
+var STEPS=JSON.parse(document.getElementById("seed-steps").textContent);
+var DEMO=JSON.parse(document.getElementById("seed-docs").textContent);
+var STORE="sid-new-psd-mapping-v1";
+var FLAGS=["done","quality","them","next"];
+var EXPLAIN={
+ done:"Юридически подтверждает факт выполнения конкретных видов работ и объём выполненных работ.",
+ quality:"Юридически подтверждает требуемый уровень качества, соответствие проекту и нормативно-технической документации.",
+ them:"Юридически подтверждает участие конкретных исполнителей: организаций, подразделений или лиц.",
+ next:"Юридически подтверждает возможность производства последующих видов работ."
+};
+var PHASES=[["Подготовка и документы для начала строительства",["0","1","2","3","4а","4в","4б","4г","5","6","7","8","9","10","11"]],
+["Выполнение СМР и текущий контроль",["16","12","13","17","14"]],
+["Подготовка и проведение приёмки",["15","18"]],
+["Испытания, диагностика и комплектование ИД",["21","22","20","19"]],
+["Приёмка объекта и комплексное опробование",["23","26","27","25","24","28"]],
+["Передача и хранение ИД, ввод",["29","30","31"]]];
+var RULES=[
+{step:"0",rx:/заключени[ея].*(экспертиз|ггэ|гээ)|проектная документация$/i,reason:"Подготовка ПД и экспертизы"},
+{step:"1",rx:/рабочая документация со штампом|перечень исполнительной документации|передач[аи] рабочей документации/i,reason:"Выдача РД / перечень ИД"},
+{step:"2",rx:/извещени[ея] о начале строительств/i,reason:"Извещение о начале строительства"},
+{step:"3",rx:/журнал авторского надзора|приказ.*авторск.*надзор/i,reason:"Организация авторского надзора"},
+{step:"4а",rx:/проект производства работ|ппгр|технологическ(ая|ие) карт/i,reason:"ППР / ППГР / техкарты"},
+{step:"4в",rx:/приказ.*(назначен|ответственн|полномоч)|документы.*квалификац/i,reason:"Назначение ответственных"},
+{step:"4г",rx:/специальн(ый|ого|ые) журнал.*работ/i,reason:"Подготовка специальных журналов"},
+{step:"5",rx:/акт[\s-]*допуск|чек[\s-]*лист.*допуск|аттестаци.*сварщик/i,reason:"Проверка допуска"},
+{step:"6",rx:/программ[аы] проверок|регистраци[яи].*общ.*журнал/i,reason:"ГСН и регистрация ОЖР"},
+{step:"7",rx:/акт.*освидетельствовани.*(геодезическ.*основ|гро)/i,reason:"Акт ГРО"},
+{step:"8",rx:/ос[\s-]*15|передач[аи].*оборудовани.*монтаж|м[\s-]*15/i,reason:"Передача оборудования"},
+{step:"9",rx:/акт.*разбивк.*ос|акт.*вынос.*в натуру/i,reason:"Разбивка осей"},
+{step:"10",rx:/акт.*входн.*контрол|журнал.*входн.*контрол|акт.*выявленн.*дефект/i,reason:"Входной контроль"},
+{step:"16",rx:/общий журнал работ|журнал производства работ|журнал.*бетонных работ|журнал.*сварочных работ/i,reason:"Записи в журналах СМР"},
+{step:"12",rx:/предписание.*строител.*контрол|замечани.*строител.*контрол/i,reason:"Выборочный контроль"},
+{step:"13",rx:/запис[ьи].*журнал.*авторск|ведомост.*изменени.*отступлен/i,reason:"Авторский надзор / изменения РД"},
+{step:"17",rx:/акт.*проверки.*(ростехнадзор|гсн)|предписани.*ростехнадзор/i,reason:"Проверки Ростехнадзора"},
+{step:"14",rx:/исполнительн(ая|ые|ой).*схем|исполнительн(ый|ые).*профил|протокол.*(лнк|стл|этл|неразрушающ|радиограф|ультразвук)/i,reason:"Съёмка / лабораторный контроль"},
+{step:"15",rx:/уведомлени.*(приемочн|приёмочн|освидетельствован)|проект.*акт.*освидетельствован/i,reason:"Подготовка инспекции"},
+{step:"18",rx:/акт.*(освидетельствовани.*(скрыт|строительн|участков сет)|при(е|ё)мк|индивидуальн.*испытани.*трубопровод)|акт.*(промывк|продувк|очистк).*трубопровод|акт.*приемк.*(сва[ий]|основан|металлоконструкц|резервуар|покрыт|трубопровод)|форма 4.*инспекц/i,reason:"Приёмочная инспекция и документы приёмки",aggregate:true},
+{step:"21",rx:/техническ.*отчет.*внутритрубн|внутритрубн.*диагностик/i,reason:"Внутритрубная диагностика"},
+{step:"22",rx:/акт.*индивидуальн.*испытан.*оборудован/i,reason:"Индивидуальные испытания оборудования"},
+{step:"20",rx:/комплект.*исполнительн.*документац|реестр.*исполнительн.*документац|рабочие чертежи.*соответств/i,reason:"Комплектование ИД"},
+{step:"19",rx:/реестр замечаний.*(ид|исполнительн)|замечани.*к комплект.*ид/i,reason:"Проверка комплекта ИД"},
+{step:"23",rx:/акт.*приемк.*комплексн.*опробован/i,reason:"Рабочая комиссия"},
+{step:"26",rx:/протокол.*шеф[\s-]*наладк/i,reason:"Шеф-наладка"},
+{step:"27",rx:/акт.*комплексн.*опробован|протокол.*пусконаладочн/i,reason:"Комплексное опробование"},
+{step:"25",rx:/ведомост.*недоделок|кс[\s-]*2|кс[\s-]*3/i,reason:"Предъявление / расчётные документы"},
+{step:"24",rx:/акт.*приемк.*объект.*капитальн|извещени.*окончан.*строительн/i,reason:"Приёмка ОКС"},
+{step:"28",rx:/заключени.*соответстви.*(построенн|объект)|отказ.*выдач.*зос/i,reason:"ЗОС"},
+{step:"29",rx:/акт.*передач.*исполнительн.*документац/i,reason:"Передача ИД"},
+{step:"30",rx:/разрешени.*ввод.*эксплуатац|отказ.*ввод.*эксплуатац/i,reason:"Разрешение на ввод"}
+];
+var el=id=>document.getElementById(id);
+var state={docs:DEMO.map(d=>Object.assign({},d)),edits:{},scope:"demo",distributed:false,focus:null,selected:null,tagFilters:[],unmarked:false};
+function load(){try{var x=JSON.parse(localStorage.getItem(STORE)||"null");if(x&&x.docs&&Array.isArray(x.docs))state=Object.assign(state,x)}catch(e){}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch(e){say("Локальное хранилище переполнено. Экспортируй матрицу и очисти старые данные.")}}
+function say(s){el("message").textContent=s}
+function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function normalize(s){return String(s||"").toLowerCase().replace(/ё/g,"е").replace(/[\s.,;:()«»"'–—]+/g," ").trim()}
+function fingerprint(d){var x=d.source+"|"+d.code+"|"+d.path+"|"+d.name;var h=2166136261;for(var i=0;i<x.length;i++){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+"-"+d.source}
+function current(d){return state.edits[d.id]||{}}
+function status(d){var v=current(d);if(v.excluded)return"outside";if(v.confirmed&&v.step)return"confirmed";if(v.step)return"proposed";if(v.candidates&&v.candidates.length>1)return"ambiguous";if(state.distributed)return"missing";return"pending"}
+function statusLabel(s){return({outside:"Вне схемы",confirmed:"Подтверждено",proposed:"Предложено",ambiguous:"Несколько шагов",missing:"Без шага",pending:"Не распределено"})[s]||s}
+function assign(d,patch){state.edits[d.id]=Object.assign({},current(d),patch);save();}
+function candidates(d){
+ var txt=normalize(d.name),rows=[];
+ for(const rule of RULES)if(rule.rx.test(txt))rows.push({code:rule.step,reason:rule.reason,aggregate:!!rule.aggregate});
+ return rows.filter((v,i,a)=>a.findIndex(y=>y.code===v.code)===i);
+}
+function isOutside(d){return /^(00\.01|00\.02|00\.03|00\.04|00\.05)(\.|$)/.test(d.code)&&!/акт.*(приемк|приёмк)/i.test(d.name)}
+function distribute(){
+ state.docs.forEach(d=>{
+ var v=current(d);
+ if(v.confirmed||v.excluded)return;
+ var matches=candidates(d);
+ var patch={candidates:matches.map(x=>x.code),reason:matches.map(x=>x.reason).join("; "),aggregate:matches.length===1&&!!matches[0].aggregate};
+ if(matches.length===1)patch.step=matches[0].code;
+ else patch.step="";
+ if(!matches.length&&isOutside(d)){patch.excluded=true;patch.outsideReason="ПД/РД/ОРД/ОТД или документ вне рассматриваемой стадии; проверь при необходимости"}
+ assign(d,patch);
+ });
+ state.distributed=true;save();render();
+ animateFly();say("Предложенные связи построены. Они не подтверждены: проверь документы без шага и варианты с несколькими шагами.");
+}
+function count(){var s={all:state.docs.length,placed:0,missing:0,ambiguous:0,confirmed:0};state.docs.forEach(d=>{var st=status(d);if(st==="proposed"||st==="confirmed")s.placed++;if(st==="missing")s.missing++;if(st==="ambiguous")s.ambiguous++;if(st==="confirmed")s.confirmed++});return s;}
+function currentFilters(){
+ return{query:normalize(el("search").value),source:el("sourceFilter").value,st:el("statusFilter").value};
+}
+function filteredDocs(){
+ var v=currentFilters();return state.docs.filter(d=>{
+ if(v.source&&d.source!==v.source)return false;
+ if(v.st&&status(d)!==v.st)return false;
+ if(state.focus&&current(d).step!==state.focus)return false;
+ if(v.query&&!normalize(d.code+" "+d.name+" "+d.path).includes(v.query))return false;
+ var f=current(d).flags||{};if(state.unmarked&&!FLAGS.some(k=>f[k]===1))return false;
+ if(state.tagFilters.length&&!state.tagFilters.every(k=>f[k]===1))return false;
+ return true;
+ });
+}
+function groupKey(d){var x=d.path.split(" / ");return (x.length>1?x.slice(0,2).join(" / "):d.path)||"Без категории";}
+function tagHtml(d,k){
+ var f=current(d).flags||{},v=f[k]===undefined?"?":String(f[k]);
+ return '<button type="button" class="flag" data-k="'+k+'" data-v="'+v+'" data-flag-doc="'+escapeHtml(d.id)+'" title="'+escapeHtml(EXPLAIN[k])+' · нажми для изменения">'+(v==="1"?k:v==="0"?"−":"? "+k)+'</button>';
+}
+function docHtml(d){
+ var v=current(d),st=status(d),label=st==="proposed"&&v.aggregate?"Групповая гипотеза":statusLabel(st);
+ var sel='<select class="field" data-set-step="'+escapeHtml(d.id)+'"><option value="">Выбери шаг / без шага</option>'+STEPS.map(s=>'<option value="'+escapeHtml(s.code)+'"'+(s.code===v.step?" selected":"")+'>Шаг '+escapeHtml(s.code)+' · '+escapeHtml(s.title.slice(0,38))+'</option>').join("")+'</select>';
+ return '<div class="doc-row source-'+escapeHtml(d.source)+(state.selected===d.id?' selected':'')+'" data-doc="'+escapeHtml(d.id)+'">'+
+ '<div class="doc-head"><span class="mini '+(d.source==="НКНХ"?"N":"D")+'">'+escapeHtml(d.source)+'</span><span class="mini code">'+escapeHtml(d.code)+'</span><span class="mini status '+st+'">'+label+'</span></div>'+
+ '<div class="doc-name">'+escapeHtml(d.name)+'</div><div class="doc-path" title="'+escapeHtml(d.path)+'">'+escapeHtml(d.path)+'</div>'+
+ '<div class="flags">'+FLAGS.map(k=>tagHtml(d,k)).join("")+'</div>'+
+ '<div class="doc-bottom">'+sel+
+ '<button type="button" class="btn smol" data-confirm="'+escapeHtml(d.id)+'"'+(!v.step?' disabled':'')+' title="Подтвердить соответствие">✓</button>'+
+ '<button type="button" class="btn smol" data-exclude="'+escapeHtml(d.id)+'" title="Исключить из проверки">'+(v.excluded?"Вернуть":"Вне")+'</button></div>'+
+ (v.reason?'<div class="note-status">Предложено: '+escapeHtml(v.reason)+'</div>':'')+
+ '</div>';
+}
+function renderDocs(){
+ var list=filteredDocs(),groups=new Map(),html="";
+ list.forEach(d=>{var k=groupKey(d);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(d)});
+ if(!list.length){el("docs").innerHTML='<div class="empty">Ничего не найдено. Сними фильтры или загрузи перечень.</div>';el("filterCount").textContent="0 документов";return;}
+ for(const [group,docs]of groups){html+='<details class="group"'+(groups.size===1||list.length<60?' open':'')+'><summary><span>'+escapeHtml(group)+'</span><small>'+docs.length+' док.</small></summary><div class="group-content">'+docs.slice(0,180).map(docHtml).join("")+(docs.length>180?'<div class="note-status">Показаны первые 180 документов группы. Уточни поиск или вид работ.</div>':'')+'</div></details>';}
+ el("docs").innerHTML=html;
+ el("filterCount").textContent="Найдено "+list.length+" / "+state.docs.length+". "+"Группы: "+groups.size+".";
+}
+function renderDiagram(){
+ var by=new Map();for(const s of STEPS)by.set(s.code,[]);
+ state.docs.forEach(d=>{var v=current(d);if(v.step&&by.has(v.step)&&!v.excluded)by.get(v.step).push(d)});
+ var out="";
+ for(const [title,codes]of PHASES){
+ out+='<section class="phase"><h3>'+escapeHtml(title)+'</h3><div class="node-grid">';
+ for(const code of codes){
+ const s=STEPS.find(x=>x.code===code);if(!s)continue;
+ const docs=by.get(code)||[],names=docs.slice(0,2).map(d=>d.name.slice(0,55));
+ out+='<button type="button" class="node '+(docs.length?"":"empty-node")+(state.focus===code?" current":"")+'" data-step="'+escapeHtml(code)+'">'+
+ '<div class="node-head"><span class="node-num">ШАГ '+escapeHtml(code)+'</span><span class="node-count">'+docs.length+' док.</span></div>'+
+ '<p class="node-title">'+escapeHtml(s.title)+'</p>'+
+ (docs.length?'<div class="node-sample">'+names.map(escapeHtml).join(" · ")+(docs.length>2?" · +"+(docs.length-2):"")+'</div>':'')+'</button>';
+ }
+ out+='</div></section>';
+ }
+ if(state.focus){
+ var st=STEPS.find(x=>x.code===state.focus),docs=by.get(state.focus)||[];
+ out+='<div class="step-info"><h4>Шаг '+escapeHtml(st.code)+'. '+escapeHtml(st.title)+'</h4>'+
+ '<p>Назначено '+docs.length+' записей. Назначение может быть предварительным и не означает обязательность документа.</p>'+
+ '<div class="step-list">'+docs.slice(0,8).map(x=>'<span class="step-pill">'+escapeHtml(x.code+" "+x.name.slice(0,32))+'</span>').join("")+(docs.length>8?'<span class="step-pill">+'+(docs.length-8)+'</span>':'')+'</div></div>';
+ }
+ el("diagram").innerHTML=out;
+ el("currentFocus").textContent=state.focus?"Выбран шаг "+state.focus+" · фильтр слева":"Показаны все 35 шагов";
+ var missing=state.docs.filter(x=>status(x)==="missing");
+ el("gapExplain").textContent=state.distributed?"Без предложенного соответствия: "+missing.length+". Это кандидаты на уточнение процесса, а не доказанные пропуски.":"Распредели документы для выявления кандидатов на пробелы.";
+ el("gapSamples").innerHTML=missing.slice(0,12).map(d=>'<button type="button" data-show-doc="'+escapeHtml(d.id)+'" title="'+escapeHtml(d.path)+'">'+escapeHtml(d.name)+'</button>').join("");
+}
+function render(){
+ var c=count();["All","Placed","Missing","Ambiguous","Confirmed"].forEach(k=>el("count"+k).textContent=c[k.toLowerCase()]);
+ el("bannerText").textContent=state.scope==="demo"?"Демонстрационные данные: "+state.docs.length+" записей (40 разновидностей из имеющегося каталога ПСД, две площадки). Для анализа полноты загрузи полный Excel.":"Локально загружено "+state.docs.length+" строк ПСД. Ничего не отправлено на сервер.";
+ el("banner").classList.toggle("ok",state.scope!=="demo");
+ document.querySelectorAll("[data-filter]").forEach(b=>b.classList.toggle("active",state.tagFilters.includes(b.dataset.filter)));
+ el("unmarked").classList.toggle("active",state.unmarked);
+ renderDocs();renderDiagram();
+}
+function focusDoc(id){const d=state.docs.find(x=>x.id===id);if(!d)return;state.selected=d.id;state.focus=null;el("search").value=d.code;render();el("docs").scrollIntoView({behavior:"smooth",block:"start"});}
+function download(file,text,mime){var blob=new Blob(["\uFEFF",text],{type:mime||"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function csvCell(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'}
+function exportMatrix(){
+ var h=["Площадка","Код ПСД","Наименование документа","Полный путь","Шаг","Статус","Уверенность","Основание","done","quality","them","next"];
+ var rows=[h].concat(state.docs.map(d=>{var v=current(d),f=v.flags||{};return[d.source,d.code,d.name,d.path,v.step||"",statusLabel(status(d)),v.confirmed?"Подтверждено":v.aggregate?"Групповая гипотеза":"Не проверено",v.reason||"",...FLAGS.map(k=>f[k]===1?k:f[k]===0?"нет":"не оценено")]}));
+ download("Матрица_ПСД_по_шагам_NEW.csv",rows.map(row=>row.map(csvCell).join(";")).join("\r\n"));
+ say("Матрица сохранена в CSV: одна строка на документ и отдельные столбцы done / quality / them / next.");
+}
+function exportQuestions(){
+ var a=state.docs.filter(d=>["missing","ambiguous"].includes(status(d)));
+ var rows=[["Площадка","Код","Документ","Вид работ / путь","Статус","Вопрос"]].concat(a.map(d=>[d.source,d.code,d.name,d.path,statusLabel(status(d)),"В каком шаге создаётся, оформляется или проверяется этот документ? Возможно ли, что действие отсутствует в схеме?"]));
+ download("Вопросы_о_пробелах_СМР.csv",rows.map(r=>r.map(csvCell).join(";")).join("\r\n"));
+ say("Сохранены вопросы по "+a.length+" документам. Перед отправкой участникам проверь применимость к объекту.");
+}
+function parserCsv(t){
+ const delimiter=(t.split("\n")[0].match(/;/g)||[]).length>(t.split("\n")[0].match(/,/g)||[]).length?";":",";
+ var out=[],line=[],field="",inQuote=false;
+ for(var i=0;i<t.length;i++){const c=t[i];if(c==='"'){if(inQuote&&t[i+1]==='"'){field+='"';i++}else inQuote=!inQuote;}else if(c===delimiter&&!inQuote){line.push(field);field=""}else if((c==="\n"||c==="\r")&&!inQuote){if(c==="\r"&&t[i+1]==="\n")i++;line.push(field);out.push(line);line=[];field=""}else field+=c;}
+ if(field||line.length){line.push(field);out.push(line)}
+ var cols=(out.shift()||[]).map(x=>x.trim().replace(/^\uFEFF/,""));
+ return out.map(row=>Object.fromEntries(cols.map((x,i)=>[x,row[i]||""])));
+}
+function inferSource(file,sheet){var str=(file.name+" "+sheet).toLowerCase();return str.includes("13.1")||str.includes("дгп")?"ДГП":"НКНХ"}
+function mapRows(rows,source){
+ return rows.filter(x=>{
+  var name=x["Наименование документа"]||x["ДГП"]||x["НКНХ"]||"";
+  var code=x["№ п/п"]||x["Код"]||"";
+  var type=x["Тип записи"]||"";
+  return name&&code&&String(code).includes(".")&&(!type||type==="Документ");
+ }).map(x=>{
+  var d={source:source,code:String(x["№ п/п"]||x["Код"]||"").trim(),name:String(x["Наименование документа"]||x["ДГП"]||x["НКНХ"]||"").trim(),path:String(x["Путь"]||"Без пути: исходный реестр").trim(),demo:false};
+  d.id=fingerprint(d);return d;
+ });
+}
+function uniq(a){var seen=new Set();return a.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true})}
+async function importFiles(files){
+ const records=[];var errors=[];
+ for(const file of files){
+  const suffix=file.name.split(".").pop().toLowerCase();
+  try{
+   if(suffix==="csv"||suffix==="tsv"){
+    const text=await file.text(),rows=parserCsv(text);
+    const source=inferSource(file,"");
+    records.push(...mapRows(rows,source));
+   }else if(["xlsx","xls"].includes(suffix)){
+    if(!window.XLSX){errors.push(file.name+": библиотека чтения Excel не загрузилась. Экспортируй CSV и загрузи его.");continue;}
+    const bytes=await file.arrayBuffer();
+    const wb=window.XLSX.read(bytes,{type:"array"});
+    for(const sheetName of wb.SheetNames){
+     const sheet=wb.Sheets[sheetName],rows=window.XLSX.utils.sheet_to_json(sheet,{defval:""});
+     const headers=rows[0]||{};
+     if(!("Наименование документа" in headers))continue;
+     records.push(...mapRows(rows,inferSource(file,sheetName)));
+    }
+   }else errors.push("Формат "+file.name+" не поддерживается");
+  }catch(e){errors.push(file.name+": "+(e.message||String(e)));}
+ }
+ const fresh=uniq(records);
+ if(!fresh.length){say("Не удалось прочитать документы. Нужны столбцы «№ п/п», «Наименование документа», «Путь». "+errors.join(" "));return;}
+ state.docs=fresh;state.edits={};state.scope="upload";state.distributed=false;state.focus=null;state.selected=null;
+ save();render();say("Загружено "+fresh.length+" строк, источники: "+[...new Set(fresh.map(d=>d.source))].join(" / ")+". "+errors.join(" "));
+}
+function animateFly(){
+ if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+ var docs=filteredDocs().filter(d=>current(d).step).slice(0,9);
+ var from=el("docs").getBoundingClientRect();
+ docs.forEach((d,i)=>setTimeout(()=>{
+  const to=el("diagram").querySelector('[data-step="'+current(d).step+'"]');
+  if(!to)return;
+  const t=to.getBoundingClientRect(),f=document.createElement("div");
+  f.className="fly";f.textContent=d.name.slice(0,43);f.style.left=(from.left+24)+"px";f.style.top=(from.top+40+i%3*25)+"px";
+  document.body.append(f);
+  const dx=t.left-(from.left+24)+Math.min(t.width/2,80),dy=t.top-(from.top+40+i%3*25);
+  f.animate([{opacity:0,transform:"scale(.75)"},{opacity:1,offset:.15},{opacity:.95,transform:"translate("+dx+"px,"+dy+"px) scale(.78)",offset:.88},{opacity:0,transform:"translate("+dx+"px,"+dy+"px) scale(.6)"}],{duration:750,fill:"forwards",easing:"ease-in-out"}).onfinish=()=>{f.remove();to.classList.add("node-target");setTimeout(()=>to.classList.remove("node-target"),1000)};
+ },i*95));
+}
+function showDefinition(e){
+ const key=e.target.closest(".flag")?.dataset.k;if(!key)return;
+ const pop=el("definition");el("defHeading").textContent=key+" · функция исполнительной документации";el("defText").textContent=EXPLAIN[key];
+ const r=e.target.getBoundingClientRect();pop.style.top=Math.min(window.innerHeight-155,r.bottom+9)+"px";pop.style.left=Math.min(window.innerWidth-365,Math.max(12,r.left))+"px";pop.classList.add("open");
+}
+el("distribute").addEventListener("click",distribute);
+el("search").addEventListener("input",renderDocs);
+el("sourceFilter").addEventListener("change",renderDocs);
+el("statusFilter").addEventListener("change",renderDocs);
+document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.filter;state.tagFilters=state.tagFilters.includes(k)?state.tagFilters.filter(x=>x!==k):state.tagFilters.concat(k);render()}));
+el("unmarked").addEventListener("click",()=>{state.unmarked=!state.unmarked;render()});
+el("docs").addEventListener("click",e=>{
+ const b=e.target.closest("[data-flag-doc]");
+ if(b){const d=state.docs.find(x=>x.id===b.dataset.flagDoc);if(!d)return;const f=Object.assign({},current(d).flags||{}),k=b.dataset.k;f[k]=f[k]===undefined?1:f[k]===1?0:undefined;if(f[k]===undefined)delete f[k];assign(d,{flags:f});showDefinition(e);renderDocs();return;}
+ const yes=e.target.closest("[data-confirm]");
+ if(yes){const d=state.docs.find(x=>x.id===yes.dataset.confirm);if(d){assign(d,{confirmed:true,excluded:false});render();}return;}
+ const no=e.target.closest("[data-exclude]");
+ if(no){const d=state.docs.find(x=>x.id===no.dataset.exclude);if(d){assign(d,{excluded:!current(d).excluded,confirmed:false});render();}return;}
+ const r=e.target.closest(".doc-row");if(r){state.selected=r.dataset.doc;document.querySelectorAll(".doc-row").forEach(x=>x.classList.toggle("selected",x.dataset.doc===state.selected));}
+});
+el("docs").addEventListener("change",e=>{
+ const s=e.target.closest("[data-set-step]");if(!s)return;
+ const d=state.docs.find(x=>x.id===s.dataset.setStep);
+ if(d){assign(d,{step:s.value,confirmed:false,excluded:false,reason:s.value?"Назначено вручную, ожидает подтверждения":"",candidates:[]});render();}
+});
+el("diagram").addEventListener("click",e=>{const b=e.target.closest("[data-step]");if(!b)return;state.focus=state.focus===b.dataset.step?null:b.dataset.step;save();render();});
+el("gapSamples").addEventListener("click",e=>{const b=e.target.closest("[data-show-doc]");if(b)focusDoc(b.dataset.showDoc)});
+el("clearFocus").addEventListener("click",()=>{state.focus=null;save();render()});
+el("resetMapping").addEventListener("click",()=>{if(!confirm("Сбросить только автоматические предложения? Ручные подтверждения и метки сохранятся."))return;for(const d of state.docs){const v=current(d);if(!v.confirmed){delete v.step;delete v.candidates;delete v.reason;delete v.aggregate;delete v.outsideReason;if(v.excluded&&isOutside(d))delete v.excluded}}state.distributed=false;state.focus=null;save();render();});
+el("export").addEventListener("click",exportMatrix);el("exportQuestions").addEventListener("click",exportQuestions);
+el("upload").addEventListener("change",async e=>{await importFiles([...e.target.files]);e.target.value=""});
+el("resetDemo").addEventListener("click",()=>{if(state.scope!=="demo"&&!confirm("Заменить загруженные данные демо-набором? Перед этим экспортируй матрицу."))return;state.docs=DEMO.map(x=>Object.assign({},x));state.edits={};state.scope="demo";state.distributed=false;state.focus=null;save();render();});
+el("closeDef").addEventListener("click",()=>el("definition").classList.remove("open"));
+document.addEventListener("keydown",e=>{if(e.key==="Escape")el("definition").classList.remove("open")});
+document.addEventListener("click",e=>{if(!e.target.closest(".flag")&&!e.target.closest("#definition"))el("definition").classList.remove("open")});
+load();render();
+})();
+</script>
+</body>
+</html>
