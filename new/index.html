@@ -253,6 +253,29 @@ html body .diagram .node.has-content-change.current::after{content:"РАССМА
 .memo-pipe,.memo-pipe-action{padding:9px 8px;margin:10px 0;border-left:3px solid #8b61c4;background:#f8f4fd;border-radius:6px}
 .memo-pipe h4,.memo-pipe-action h4{margin:0 0 7px;color:#6c46a6;font-size:11px;font-weight:850}
 .memo-focused{outline:3px solid #c9b2ee!important;outline-offset:2px}
+
+/* Контуры по BPMN: маршрут в выделенной области, ортогональные соединения и явное условие. */
+.memo-edges,.memo-arrow-path{display:none!important}
+.bpmn-loop-panel{margin:11px 0 15px;padding:12px 14px 14px;border:1px solid #d9c9ed;border-radius:10px;background:#fbf9fe}
+.bpmn-loop-header{display:flex;gap:9px;justify-content:space-between;flex-wrap:wrap;margin-bottom:11px;font-size:11px;color:#71509b}
+.bpmn-loop-header span{color:#746b81;font-size:10px}
+.bpmn-loop-row{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:nowrap}
+.bpmn-mini-task{min-width:0;max-width:220px;flex:1;border:1px solid #bca8d5;background:#fff;border-radius:7px;padding:9px 8px;text-align:center;color:#594173;font-weight:800;font-size:10px;line-height:1.4}
+.bpmn-mini-task small{display:block;color:#6d7281;font-weight:500;margin-top:3px;font-size:9px}
+.bpmn-mini-task.light{background:#f2f8f7;border-color:#b8d7d0;color:#2f7165}
+.bpmn-mini-task:hover{background:#f2ebfb}
+.bpmn-flow-arrow{color:#7e5ca8;font-weight:900;font-size:17px;white-space:nowrap;flex:none}
+.bpmn-flow-arrow small{font-size:10px;font-weight:700}
+.bpmn-mini-gateway{width:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;flex:none;font-weight:850;color:#7655a1;font-size:10px;text-align:center}
+.bpmn-mini-gateway b{font-size:25px;line-height:1}
+.bpmn-loop-branch{display:flex;justify-content:center;align-items:center;gap:8px;margin:9px auto 0;max-width:690px}
+.bpmn-loop-branch .bpmn-mini-task{max-width:170px;background:#f8f4fd}
+.bpmn-loop-yes{color:#8b5aab;font-weight:850;white-space:nowrap;font-size:11px}
+.bpmn-loop-up{font-size:10px;color:#7958a7;white-space:nowrap}
+.bpmn-inspection-loop{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:7px;margin:9px 0 12px;padding:9px;border:1px solid #e0d2ef;border-radius:8px;background:#fbf9fe;font-size:10px;color:#78559c;font-weight:750}
+.bpmn-inspection-loop .bpmn-mini-task{max-width:150px;flex:0 1 150px}
+.bpmn-no{color:#358369}
+@media(max-width:700px){.bpmn-loop-row{gap:4px}.bpmn-mini-gateway{width:75px;font-size:9px}.bpmn-mini-task{padding:6px;font-size:9px}.bpmn-flow-arrow{font-size:12px}.bpmn-loop-branch{flex-wrap:wrap}.bpmn-loop-up{white-space:normal}.bpmn-mini-task small{font-size:8px}}
 </style>
 <link rel="stylesheet" href="./protocol.css?v=202611171710">
 <script>document.documentElement.classList.toggle("protocol-enabled",new URLSearchParams(location.search).get("protocol")==="1");</script>
@@ -692,33 +715,39 @@ for(const [code,nums] of Object.entries(memoMap)){
 }
 const legend=document.querySelector(".change-icon-legend");
 if(legend&&!legend.querySelector(".memo-legend")){const l=document.createElement("span");l.className="memo-legend";l.textContent=" · М10, М25, М29 = три закрытых пункта МЕМО";legend.append(l);}
-let svg=diagram.querySelector(".memo-edges");
-if(!svg){
- svg=document.createElementNS(ns,"svg");svg.setAttribute("class","memo-edges");svg.setAttribute("aria-label","Петли возврата к устранению замечаний");svg.style.pointerEvents="none";
- svg.innerHTML='<defs><marker id="memo-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#8355bb"></path></marker></defs>';
- diagram.append(svg);
+
+/* M10/M21. Развилки представлены отдельными читаемыми контурами.
+   Линии не проходят по карточкам и не пересекают друг друга. */
+const loopHost=[...diagram.querySelectorAll(".feedback-note")].find(x=>x.textContent.includes("Замечания при текущем контроле"));
+if(loopHost){
+ const panel=document.createElement("section");
+ panel.className="bpmn-loop-panel";
+ panel.id="memo-loop-10";
+ panel.setAttribute("aria-label","Цикл контроля при СМР по пункту 10 МЕМО");
+ panel.innerHTML=
+ '<div class="bpmn-loop-header"><strong>М10 · Контур устранения замечаний</strong><span>Параллельный контроль СМР, возврат при замечаниях</span></div>'+
+ '<div class="bpmn-loop-row"><button type="button" data-memo-go="12" class="bpmn-mini-task">Шаги 12 / 13<small>Выборочная проверка СК / авторский надзор</small></button>'+
+ '<span class="bpmn-flow-arrow" aria-hidden="true">→</span><div class="bpmn-mini-gateway" aria-label="Есть замечания?"><b>◇</b><span>Есть замечания?</span></div>'+
+ '<span class="bpmn-flow-arrow" aria-hidden="true">→ <small>нет</small></span><button type="button" data-memo-go="14" class="bpmn-mini-task light">Шаг 14<small>Исполнительная съёмка и лабораторный контроль</small></button></div>'+
+ '<div class="bpmn-loop-branch"><span class="bpmn-loop-yes">Да ↓</span><button type="button" data-memo-go="16" class="bpmn-mini-task">Шаг 16.4<small>Устранить замечания</small></button>'+
+ '<span class="bpmn-flow-arrow" aria-hidden="true">→</span><button type="button" data-memo-go="12" class="bpmn-mini-task">Повторная проверка<small>Шаг 12 / 13 по применимости</small></button><span class="bpmn-loop-up">↶ К условию «Есть замечания?»</span></div>';
+ loopHost.replaceWith(panel);
 }
-function draw(){
- const b=diagram.getBoundingClientRect(),w=diagram.scrollWidth,h=diagram.scrollHeight;if(w<50||h<50)return;
- svg.setAttribute("width",w);svg.setAttribute("height",h);svg.setAttribute("viewBox","0 0 "+w+" "+h);
- svg.querySelectorAll(".memo-arrow-path").forEach(x=>x.remove());
- [["12","16","right",0],["13","16","right",1],["18","16","left",0]].forEach(([from,to,side,index])=>{
-  const a=diagram.querySelector('.node[data-code="'+from+'"]'),z=diagram.querySelector('.node[data-code="'+to+'"]');if(!a||!z)return;
-  const ar=a.getBoundingClientRect(),zr=z.getBoundingClientRect(),right=side==="right";
-  const x1=(right?ar.right:ar.left)-b.left,y1=ar.top-b.top+ar.height/2;
-  const x2=(right?zr.right:zr.left)-b.left,y2=zr.top-b.top+zr.height/2;
-  const lane=right?Math.min(w-7,Math.max(x1,x2)+18+index*10):Math.max(7,Math.min(x1,x2)-20);
-  const path=document.createElementNS(ns,"path");path.setAttribute("class","memo-arrow-path");
-  path.setAttribute("d","M"+x1+","+y1+" H"+lane+" V"+y2+" H"+x2);
-  path.setAttribute("stroke","#8355bb");path.setAttribute("stroke-width","2.5");path.setAttribute("fill","none");path.setAttribute("stroke-dasharray","7 4");path.setAttribute("marker-end","url(#memo-arrow)");
-  const title=document.createElementNS(ns,"title");title.textContent=from==="18"?"МЕМО 21: отрицательная приёмка → устранение → повторная инспекция":"МЕМО 10: замечания при контроле → устранение на СМР → повторная проверка";path.append(title);
-  svg.append(path);
- });
+const acceptanceNode=diagram.querySelector('.node[data-code="18"]');
+if(acceptanceNode){
+ const holder=acceptanceNode.closest(".single-node");
+ if(holder&&!document.getElementById("memo-loop-21")){
+   const panel=document.createElement("div");panel.className="bpmn-inspection-loop";panel.id="memo-loop-21";
+   panel.innerHTML='<span class="bpmn-loop-yes">М21 · отрицательный результат?</span><span>Да →</span><button type="button" class="bpmn-mini-task" data-memo-go="16">Шаг 16.4 · устранение</button><span>→</span><button type="button" class="bpmn-mini-task" data-memo-go="18">Шаг 18 · повторная инспекция</button><span class="bpmn-no">Нет → оформление акта</span>';
+   holder.insertAdjacentElement("afterend",panel);
+ }
 }
-function updateSvg(){requestAnimationFrame(draw);}
-window.addEventListener("resize",updateSvg);
-if("ResizeObserver" in window)new ResizeObserver(updateSvg).observe(diagram);
-updateSvg();
+diagram.addEventListener("click",event=>{
+ const b=event.target.closest("[data-memo-go]");if(!b)return;
+ event.preventDefault();event.stopPropagation();
+ const idx=MODEL.steps.findIndex(x=>x.code===b.dataset.memoGo);
+ if(idx>=0)go(idx);
+});
 function actCatalog(){
  const details=document.createElement("details");details.id="memo-25";details.className="memo-catalog";details.open=focus==="25";
  const title=document.createElement("summary");title.textContent="М25 · Акты приёмки по видам работ (ПСД)";details.append(title);
