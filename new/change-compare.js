@@ -86,6 +86,7 @@ function project(step,selected){
 function repaint(){
  const step=MODEL.steps[state.index],root=document.getElementById("newDiff");
  if(!step||!root)return;
+ const oldStatus=root.querySelector(".diff-meta");
  const result=project(step,mode),{base,draft,issues}=result;
  const changed=KEYS.some(k=>base[k]!==draft[k]);
  const moved=OLD_SEQUENCE.indexOf(step.code)!==state.index;
@@ -111,6 +112,7 @@ function repaint(){
  '<button type="button" id="changeDiffToggle">'+(highlight?"Чистовой текст":"Показать изменения")+'</button></div>'+
  conflict+uncertain+order+
  '<div class="source-compare-baseline">База для всех трёх режимов: '+(window.SID_S0?'полная исходная схема S0 из Excel':window.SID_S0_ERROR?'⚠ Ошибка загрузки исходной S0; сравнение неполное':'исходная S0 загружается')+'. Экспертные предложения - неутверждённый проект.</div>';
+ if(mode==="protocol"&&oldStatus)root.append(oldStatus); // preserve existing step-status editor and its listeners
  root.querySelectorAll("[data-change-view]").forEach(b=>b.addEventListener("click",()=>{
    mode=b.dataset.changeView;highlight=true;render();
  }));
