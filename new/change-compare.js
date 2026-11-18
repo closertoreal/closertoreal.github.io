@@ -18,8 +18,9 @@ function getProposals(code){
  }))).filter(p=>KEYS.includes(p.field));
 }
 function baseline(step){
- const original=CHANGE_BASELINE[step.code]||{};
- return Object.fromEntries(KEYS.map(k=>[k,original[k]??step[k]]));
+ const legacy=CHANGE_BASELINE[step.code]||{};
+ const exact=window.SID_S0?.[step.code]||{};
+ return Object.fromEntries(KEYS.map(k=>[k,exact[k]??legacy[k]??step[k]]));
 }
 function tokens(str){return String(str).match(/[^\s]+[ \t]*|\r?\n|[ \t]+/g)||[]}
 function differ(before,after){
@@ -88,7 +89,7 @@ function repaint(){
  const result=project(step,mode),{base,draft,issues}=result;
  const changed=KEYS.some(k=>base[k]!==draft[k]);
  const moved=OLD_SEQUENCE.indexOf(step.code)!==state.index;
- const haveProtocol=!!CHANGE_BASELINE[step.code]||moved;
+ const haveProtocol=KEYS.some(k=>baseline(step)[k]!==step[k])||moved;
  const n=result.proposals.length;
  document.documentElement.classList.toggle("new-diff-active",Boolean(highlight&&changed));
  if(!haveProtocol&&!n){root.classList.add("hidden");return}
@@ -109,7 +110,7 @@ function repaint(){
  '<div class="source-compare-about"><span>'+encode(description)+'</span>'+
  '<button type="button" id="changeDiffToggle">'+(highlight?"Чистовой текст":"Показать изменения")+'</button></div>'+
  conflict+uncertain+order+
- '<div class="source-compare-baseline">База для всех трёх режимов: исходная схема до протокола (S0). Экспертные предложения - неутверждённый проект.</div>';
+ '<div class="source-compare-baseline">База для всех трёх режимов: '+(window.SID_S0?'полная исходная схема S0 из Excel':window.SID_S0_ERROR?'⚠ Ошибка загрузки исходной S0; сравнение неполное':'исходная S0 загружается')+'. Экспертные предложения - неутверждённый проект.</div>';
  root.querySelectorAll("[data-change-view]").forEach(b=>b.addEventListener("click",()=>{
    mode=b.dataset.changeView;highlight=true;render();
  }));
@@ -132,5 +133,6 @@ window.addEventListener("sidReviewMode",ev=>{
  if(["protocol","expert","combined"].includes(requested)){mode=requested;highlight=true;render()}
 });
 window.SID_COMPARE_DEBUG={project,mode:()=>mode,proposals:getProposals};
+window.addEventListener("sidBaselineReady",()=>render());
 repaint();
 })();
