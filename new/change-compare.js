@@ -109,7 +109,7 @@ function repaint(){
  '<span><del class="diff-remove">Удалено</del><ins class="diff-add">Добавлено</ins></span></div>'+
  '<div class="source-compare-buttons" role="group" aria-label="Источник правок к карточке">'+buttons+'</div>'+
  '<div class="source-compare-about"><span>'+encode(description)+'</span>'+
- '<button type="button" id="changeDiffToggle">'+(highlight?"Чистовой текст":"Показать изменения")+'</button></div>'+
+ '<button type="button" id="changeDiffToggle">'+(highlight?"Показать текущую S1":"Показать изменения")+'</button></div>'+
  conflict+uncertain+order+
  '<div class="source-compare-baseline">База для всех трёх режимов: '+(window.SID_S0?'полная исходная схема S0 из Excel':window.SID_S0_ERROR?'⚠ Ошибка загрузки исходной S0; сравнение неполное':'исходная S0 загружается')+'. Экспертные предложения - неутверждённый проект.</div>';
  if(mode==="protocol"&&oldStatus)root.append(oldStatus); // preserve existing step-status editor and its listeners
