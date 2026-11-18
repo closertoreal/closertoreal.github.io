@@ -181,6 +181,7 @@ function onClick(ev){
   }
   refresh();
   hub.querySelector("#erDetail").scrollTop=0;
+  if(record)window.dispatchEvent(new CustomEvent("sidReviewMode",{detail:{mode:record.origin==="expert"?"expert":"protocol"}}));
   return;
  }
  if(b.hasAttribute("data-er-back")){mobileDetail=false;refresh();return}
