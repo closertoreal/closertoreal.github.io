@@ -102,3 +102,28 @@ html:not(.protocol-enabled) #prcPanel{display:flex!important}
  .er-expand{padding:5px 4px}
  .er-proposal-head button{margin-left:0}
 }
+
+/* Three-source comparison controls live INSIDE the step card above input/action/output */
+#newDiff.new-diff{margin:8px 0 13px;padding:10px 12px;border:1px solid #dce4eb;border-radius:9px;background:#fafbfd}
+.source-compare-header{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.source-compare-header strong{font-size:12px;color:#344c5c}
+.source-compare-header>span{display:flex;gap:8px;font-size:10px}
+.source-compare-buttons{display:flex;gap:4px;align-items:center;margin-top:9px;padding:3px;border-radius:8px;background:#edf1f5;border:1px solid #dfe6ed}
+.source-compare-btn{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;min-width:0;border:1px solid transparent;border-radius:6px;padding:7px 9px;background:transparent;color:#61727e;font-size:11px;font-weight:760;cursor:pointer}
+.source-compare-btn:hover{color:#304f63;background:#fff9}
+.source-compare-btn.active{background:#fff;color:#263e51;border-color:#cbd9e5;box-shadow:0 1px 5px #263e5118}
+.source-compare-btn small{min-width:17px;min-height:17px;padding:1px 4px;border-radius:30px;background:#e6eef4;color:#527187;font-size:10px;line-height:15px}
+.source-compare-btn[data-change-view=expert].active{color:#704a92;border-color:#d0bee0}
+.source-compare-btn[data-change-view=combined].active{color:#336555;border-color:#bcdbc9}
+.source-compare-about{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;font-size:10.7px;color:#657783;line-height:1.45}
+.source-compare-about button{font-size:10.5px;color:#436782;font-weight:750;border:1px solid #d9e2e9;background:#fff;padding:5px 8px;border-radius:6px;white-space:nowrap;cursor:pointer}
+.source-compare-about button:hover{background:#f0f6f8}
+.source-compare-baseline{font-size:9.8px;color:#88949c;margin-top:7px}
+.source-compare-warning{padding:7px 9px;border-left:3px solid #cba16a;color:#775623;background:#fff7e9;margin:7px 0 0;font-size:10.5px}
+.source-compare-secondary{padding:7px 9px;border-left:3px solid #af9abf;color:#664f77;background:#f8f4fc;margin:7px 0 0;font-size:10.5px}
+@media(max-width:650px){
+ .source-compare-header strong{font-size:11px}
+ .source-compare-buttons{gap:2px}
+ .source-compare-btn{font-size:10px;padding:7px 4px}
+ .source-compare-about{flex-direction:column;align-items:flex-start}
+}
