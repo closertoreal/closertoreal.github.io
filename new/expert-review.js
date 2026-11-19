@@ -10,6 +10,14 @@ const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;
 const steps=MODEL.steps;
 const codes=new Set(steps.map(s=>s.code));
 const expertRecords=expert.rows.map(r=>({...r,origin:"expert",steps:r.target.filter(s=>codes.has(s))}));
+/* Сопоставление по объекту правки, а не по совпадающему номеру:
+   старая схема -> original oldStep; новая -> конкретные proposals[].step. */
+const schemeVersion=()=>window.SID_SCHEME_MODE==="old"?"old":"new";
+function actualSteps(r){
+ if(r.origin!=="expert")return r.steps||[];
+ if(schemeVersion()==="old")return codes.has(String(r.oldStep))?[String(r.oldStep)]:[];
+ return [...new Set((r.proposals||[]).map(p=>String(p.step)).filter(x=>codes.has(x)))];
+}
 function protocolRecords(){
  let saved={};try{saved=JSON.parse(localStorage.getItem("sid-new-protocol-v1")||"{}")||{}}catch(e){}
  const edits=saved.edits||{};
@@ -39,10 +47,10 @@ const snippet=(t,n)=>{let s=String(t||"").replace(/\s+/g," ").trim();return s.le
 function matches(r){
  const input=[r.comment,r.text,r.mapping,r.oldObject,r.oldStep,r.n,r.kind,r.note,...(r.questions||[]).map(x=>x.question+" "+x.answer),...(r.proposals||[]).map(x=>x.text)].join(" ").toLowerCase();
  return (source==="all"||r.origin===source)&&(!disputed||r.origin==="expert"&&r.status==="disputed")&&
-  (scope==="all"||r.steps.includes(atStep()))&&(!search||input.includes(search));
+  (scope==="all"||actualSteps(r).includes(atStep()))&&(!search||input.includes(search));
 }
 function listCount(){
- const at=atStep(),es=expertRecords.filter(x=>x.steps.includes(at)).length;
+ const at=atStep(),es=expertRecords.filter(x=>actualSteps(x).includes(at)).length;
  const ps=protocolRecords().filter(x=>x.steps.includes(at)).length;
  return {es,ps};
 }
@@ -80,7 +88,7 @@ function listItem(r){
  return '<button type="button" role="option" aria-selected="'+String(active)+'" data-er-item="'+esc(r.id)+'" class="er-item'+(active?" is-selected":"")+' '+r.origin+'">'+
  '<span class="er-item-meta"><span class="er-source-name">'+label(r)+'</span>'+state+'</span>'+
  '<span class="er-item-text">'+esc(snippet(subject,145))+'</span>'+
- (scope==="all"?'<span class="er-item-steps">S1: '+esc(r.steps.join(", ")||"без шага")+'</span>':"")+
+ (scope==="all"?'<span class="er-item-steps">'+(schemeVersion()==="old"?"Старая схема":"Новая схема")+': '+esc(actualSteps(r).join(", ")||"без шага")+'</span>':"")+
  '</button>';
 }
 function currentField(p){
@@ -98,7 +106,7 @@ function proposal(p,index){
  '<button type="button" data-er-goto="'+esc(p.step)+'">Показать шаг</button></div>'+
  '<div class="er-proposal-text">'+esc(p.text)+'</div>'+
  (p.note?'<p class="er-proposal-note">'+esc(p.note)+'</p>':"")+
- (original?'<details class="er-current"><summary>Сравнить с действующим текстом S1</summary><pre>'+esc(original)+'</pre></details>':"")+
+ ""+
  '</section>';
 }
 function question(q){
@@ -114,15 +122,12 @@ function expertDetail(r){
  const tag=r.status==="disputed"?'<span class="er-detail-warning">Есть открытые вопросы</span>':"";
  return '<div class="er-detail-head"><button type="button" class="er-back" data-er-back>← К списку</button>'+
  '<span class="er-detail-source expert">✎ Эксперт '+esc(r.sourceColumn)+'</span>'+tag+'</div>'+
- '<h3>Комментарий к старому шагу '+esc(r.oldStep)+'</h3>'+
+ '<h3>'+(schemeVersion()==="old"?"Комментарий к шагу ":"Исходный комментарий к шагу ")+esc(r.oldStep)+'</h3>'+
  '<div class="er-full-comment">'+esc(r.comment)+'</div>'+
- '<div class="er-targets"><span>Актуальные шаги S1:</span>'+
- r.steps.map(x=>'<button type="button" data-er-goto="'+esc(x)+'"'+(atStep()===x?' class="is-current"':'')+'>Шаг '+esc(x)+'</button>').join("")+'</div>'+
- '<details class="er-mapping"><summary>Как комментарий перенесён с S0 на S1</summary>'+
- '<p><strong>Было:</strong> '+esc(r.oldObject)+'</p>'+
- '<p><strong>После протокола:</strong> '+esc(r.mapping)+'</p></details>'+
- '<h4>Что предлагается изменить</h4>'+
- r.proposals.map(proposal).join("")+
+ '<div class="er-targets"><span>'+(schemeVersion()==="old"?"Исходный шаг:":"Предложения относятся к шагам:")+'</span>'+
+ actualSteps(r).map(x=>'<button type="button" data-er-goto="'+esc(x)+'"'+(atStep()===x?' class="is-current"':'')+'>Шаг '+esc(x)+'</button>').join("")+'</div>'+
+ (schemeVersion()==="old"?"":'<h4>Предложения для выбранного шага</h4>'+
+ r.proposals.filter(p=>String(p.step)===atStep()).map(proposal).join(""))+
  (pending.length?'<h4 class="er-open-title">Что ещё выяснить у рабочей группы · '+pending.length+'</h4>'+pending.map(question).join(""):"")+
  (verified.length?'<details class="er-researched"'+(questionOpen?' open':'')+'><summary>Остальные вопросы, ответы и источники · '+verified.length+'</summary>'+verified.map(question).join("")+'</details>':"")+
  '<p class="er-nonfinal">Предложения отделены от текста схемы и от протокольных правок. «Правки не нужны» другого эксперта не отменяет их.</p>';
@@ -175,13 +180,13 @@ function onClick(ev){
  if(b.hasAttribute("data-er-item")){
   selected=b.dataset.erItem;mobileDetail=true;
   const record=data().find(r=>r.id===selected);
-  if(record&&record.steps.length&&!record.steps.includes(atStep())){
-    const code=record.steps[0],idx=steps.findIndex(s=>s.code===code);
+  const links=record?actualSteps(record):[];
+  if(record&&links.length&&!links.includes(atStep())){
+    const code=links[0],idx=steps.findIndex(s=>s.code===code);
     if(idx>=0){followStep.previous=code;go(idx)}
   }
   refresh();
   hub.querySelector("#erDetail").scrollTop=0;
-  if(record)window.dispatchEvent(new CustomEvent("sidReviewMode",{detail:{mode:record.origin==="expert"?"expert":"protocol"}}));
   return;
  }
  if(b.hasAttribute("data-er-back")){mobileDetail=false;refresh();return}
@@ -190,8 +195,9 @@ function onClick(ev){
 }
 function annotateDiagram(){
  document.querySelectorAll("#diagram .node").forEach(node=>{
-  const n=expertRecords.filter(r=>r.steps.includes(node.dataset.code)).length;
-  if(!n)return;
+  const n=expertRecords.filter(r=>actualSteps(r).includes(node.dataset.code)).length;
+  node.classList.toggle("er-expert-node",n>0);
+  const existing=node.querySelector(".er-expert-label");if(!n){if(existing)existing.remove();return}
   node.classList.add("er-expert-node");
   let tag=node.querySelector(".er-expert-label");
   if(!tag){tag=document.createElement("span");tag.className="er-expert-label";node.append(tag)}
@@ -211,6 +217,10 @@ const title=document.getElementById("questionTitle");
 if(title)new MutationObserver(followStep).observe(title,{childList:true,subtree:true,characterData:true});
 window.addEventListener("storage",ev=>{if(ev.key==="sid-new-protocol-v1")refresh()});
 window.addEventListener("pageshow",refresh);
+window.addEventListener("sidSchemeChanged",()=>{
+ selected=null;mobileDetail=false;followStep.previous=null;
+ annotateDiagram();refresh();
+});
 if(new URLSearchParams(location.search).get("expert")==="1"){source="expert";scope="all"}
 build();annotateDiagram();followStep();
 })();
