@@ -78,7 +78,7 @@ function build(){
  refresh();
 }
 function label(r){
- if(r.origin==="expert")return 'Эксперт '+esc(r.sourceColumn)+' · S0 шаг '+esc(r.oldStep);
+ if(r.origin==="expert")return 'Эксперт '+esc(r.sourceColumn)+' · '+(schemeVersion()==="old"?"шаг ":"исходный шаг ")+esc(r.oldStep);
  return r.n?'Протокол · №'+r.n:'Протокол · доп. запись';
 }
 function listItem(r){
