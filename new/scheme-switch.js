@@ -60,7 +60,9 @@ function updateStatus(){
  document.getElementById("diagramHeading").textContent=version==="old"?"Схема процесса · старая":"Схема процесса · новая";
  const legend=document.querySelector(".diagram-panel .change-icon-legend");
  if(legend)legend.textContent=version==="old"?"Исходные формулировки и последовательность":"Рабочая редакция после протокола";
- hint.textContent=version==="old"?"Исходная схема S0":"Новая схема S1 · после протокола";
+ hint.textContent=version==="old"?"До правок протокола":"После правок протокола";
+ const release=document.querySelector(".new-release");
+ if(release)release.innerHTML=version==="old"?"<b>Старая схема</b> До протокола":"<b>Рабочая версия</b> По протоколу";
 }
 function selectedCode(){return MODEL.steps[state.index]?.code||updatedSteps[0].code}
 function setVersion(next){
