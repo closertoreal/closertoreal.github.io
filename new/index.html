@@ -843,7 +843,7 @@ const scroll=document.querySelector(".step-panel .question-scroll");
 const before=document.querySelector(".step-panel .triplet");if(!scroll||!before)return;
 const panel=document.createElement("section");panel.className="sid-agreed-review";panel.id="sidAgreedReview";panel.setAttribute("aria-label","Согласованные изменения и открытые вопросы");before.before(panel);
 let openDiff=false,lastCode=null;
-function fmt(v,max=430){const s=String(v||"").replace(/\\s+/g," ").trim();return esc2(s.length>max?s.slice(0,max-1)+"…":s||"—")}
+function fmt(v,max=430){const s=String(v||"").replace(/\s+/g," ").trim();return esc2(s.length>max?s.slice(0,max-1)+"…":s||"—")}
 function renderReview(){
  const step=MODEL.steps[state.index];if(!step)return;
  const code=step.code;
@@ -854,7 +854,7 @@ function renderReview(){
  const yu=xr.filter(x=>x.sourceColumn==="Ю").map(x=>x.comment),k=xr.filter(x=>x.sourceColumn==="К").map(x=>x.comment);
  const proto=(typeof PROTOCOL_SOURCE==="undefined"?[]:PROTOCOL_SOURCE).filter(x=>String(x[4]||"").split(",").map(v=>v.trim()).includes(code)).map(x=>"№"+x[0]+": "+x[3]);
  const qhtml=q.map(x=>'<div class="sid-q-item" id="sid-'+esc2(x.id)+'"><b class="sid-q-dot" title="'+esc2(x.reason)+'">'+esc2(x.id)+' · '+esc2(x.field)+'</b><p>'+esc2(x.question)+'</p><small>'+esc2(x.reason)+'</small></div>').join("");
- const diffhtml=current.map(x=>{const olds=x.old.split("\\n"),news=x.new.split("\\n"),added=news.filter(s=>!olds.includes(s)),removed=olds.filter(s=>!news.includes(s));return '<section class="sid-diff-row"><header>'+esc2(({input:"Вход",output:"Выход",action:"Действие",title:"Заголовок"})[x.field]||x.field)+'</header>'+removed.map(t=>'<del>'+esc2(t)+'</del>').join("")+added.map(t=>'<ins>'+esc2(t)+'</ins>').join("")+'</section>'}).join("");
+ const diffhtml=current.map(x=>{const olds=x.old.split("\n"),news=x.new.split("\n"),added=news.filter(s=>!olds.includes(s)),removed=olds.filter(s=>!news.includes(s));return '<section class="sid-diff-row"><header>'+esc2(({input:"Вход",output:"Выход",action:"Действие",title:"Заголовок"})[x.field]||x.field)+'</header>'+removed.map(t=>'<del>'+esc2(t)+'</del>').join("")+added.map(t=>'<ins>'+esc2(t)+'</ins>').join("")+'</section>'}).join("");
  const all=questions.map(x=>'<div class="sid-q-item"><b>'+esc2(x.id)+' · шаг '+esc2(x.steps.join(", "))+'</b><p>'+esc2(x.question)+'</p><button type="button" data-sid-step="'+esc2(x.steps[0])+'">Перейти к шагу</button></div>').join("");
  const lines=[["Ю:",yu.length?yu.join(" | "):"—"],["К:",k.length?k.join(" | "):"—"],["Протокол:",proto.length?proto.slice(0,2).join(" | "):"—"],["Результат:",current.length?"Изменены поля: "+[...new Set(current.map(x=>({input:"Вход",action:"Действие",output:"Выход",title:"Название"})[x.field]))].join(", "):"Дополнительных правок к прежней версии нет"]];
  panel.innerHTML='<div style="font-weight:850;margin-bottom:6px">Правки к шагу '+esc2(code)+' · версия NEW</div>'+lines.map(([k,v])=>'<div class="sid-line"><div class="sid-key">'+esc2(k)+'</div><div class="sid-value" title="'+esc2(v)+'">'+fmt(v)+'</div></div>').join("")+
