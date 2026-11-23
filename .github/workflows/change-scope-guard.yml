@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Self-test trusted validator
-        run: python3 -m unittest discover -s tools -p 'test_change_scope_guard.py' -v
+        run: python3 -m unittest discover -s tools -p 'test_*scope_guard.py' -v
       - name: Fetch proposed revision as data
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
