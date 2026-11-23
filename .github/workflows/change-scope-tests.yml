@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - change-control/guard-prototype-20261122
+      - change-control/approval-lane-20261123
 permissions:
   contents: read
 jobs:
