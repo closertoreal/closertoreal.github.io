@@ -1,0 +1,50 @@
+# Approved edits only. Install this workflow on master before enforcing status checks.
+# CAUTION: pull_request_target must be enabled by repository Actions policy.
+# The PR code is fetched only as data, NEVER executed.
+name: Change Scope Guard
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+jobs:
+  exact-change-check:
+    name: exact-change-check
+    if: github.event.pull_request.base.ref == 'master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted master revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run trusted validator regression tests
+        run: python3 -m unittest discover -s tools -p 'test_*scope_guard.py' -v
+      - name: Fetch proposed revision as data
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git fetch --no-tags origin "$HEAD_SHA"
+      - name: Check approved branch and manifest from trusted master
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "FAIL: only same-repository approved branches are supported"
+            exit 1
+          fi
+          if [[ ! "$HEAD_BRANCH" =~ ^approved/[a-z][a-z0-9-]{2,63}$ ]]; then
+            echo "FAIL: branch must be approved/<id> (lowercase letters, digits, hyphens)"
+            exit 1
+          fi
+          APPROVAL_ID="${HEAD_BRANCH#approved/}"
+          SPEC=".change-control/approvals/${APPROVAL_ID}.json"
+          if [ ! -f "$SPEC" ]; then
+            echo "FAIL: no trusted pre-approved manifest: $SPEC"
+            exit 1
+          fi
+          python3 tools/change_scope_guard.py --base "$BASE_SHA" --head "$HEAD_SHA" --spec "$SPEC"
