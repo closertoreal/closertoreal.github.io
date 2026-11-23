@@ -69,8 +69,8 @@ class RealSiteChangeTests(unittest.TestCase):
         self.assertIn("PASS", result.stdout)
 
     def test_real_site_extra_change_in_same_html_is_rejected(self):
-        self.assertIn("<title>Проверка", self.original)
-        candidate = self.expected.replace("<title>Проверка", "<title>НЕСОГЛАСОВАННО: Проверка", 1)
+        self.assertIn("<title>", self.original)
+        candidate = self.expected.replace("<title>", "<title>НЕСОГЛАСОВАННО: ", 1)
         result = self.check(candidate)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("FAIL", result.stdout)
