@@ -21,7 +21,8 @@ class ScopeGuardTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.repo = Path(self.tmp.name)
+        self.repo = Path(self.tmp.name) / "repo"
+        self.repo.mkdir()
         git(self.repo, "init", "-q")
         git(self.repo, "config", "user.name", "Test")
         git(self.repo, "config", "user.email", "test@example.org")
@@ -30,7 +31,7 @@ class ScopeGuardTests(unittest.TestCase):
         git(self.repo, "add", ".")
         git(self.repo, "commit", "-qm", "base")
         self.base = git(self.repo, "rev-parse", "HEAD")
-        self.spec = self.repo / "approved.json"
+        self.spec = Path(self.tmp.name) / "approved.json"
         self.spec.write_text(json.dumps({"replacements": [
             {"path": "model.txt", "old": "title=old", "new": "title=new"}
         ]}), encoding="utf-8")
