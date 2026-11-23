@@ -17,4 +17,4 @@ jobs:
         with:
           persist-credentials: false
       - name: Run deterministic allowlist tests
-        run: python3 -m unittest discover -s tools -p 'test_change_scope_guard.py' -v
+        run: python3 -m unittest discover -s tools -p 'test_*scope_guard.py' -v
