@@ -1,0 +1,37 @@
+# Change-scope guard, intended for installation on the protected base branch.
+# It reads ONLY trusted code and the approved spec from that base revision.
+# The candidate PR commit is fetched and compared as DATA; its code is never run.
+name: Change Scope Guard
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+jobs:
+  exact-change-check:
+    name: exact-change-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted base revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch proposed revision as data
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git fetch --no-tags origin "$HEAD_SHA"
+      - name: Check exact approved replacements
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          SPEC=".change-control/approvals/pr-${PR_NUMBER}.json"
+          if [ ! -f "$SPEC" ]; then
+            echo "FAIL: missing approved manifest in trusted base commit: $SPEC"
+            exit 1
+          fi
+          python3 tools/change_scope_guard.py --base "$BASE_SHA" --head "$HEAD_SHA" --spec "$SPEC"
