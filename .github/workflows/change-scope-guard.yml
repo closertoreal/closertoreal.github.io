@@ -25,7 +25,7 @@ jobs:
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: git fetch --no-tags origin "$HEAD_SHA"
-      - name: Check approved branch and manifest from trusted master
+      - name: Check exact approved change or approval-only PR
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -37,14 +37,18 @@ jobs:
             echo "FAIL: only same-repository approved branches are supported"
             exit 1
           fi
-          if [[ ! "$HEAD_BRANCH" =~ ^approved/[a-z][a-z0-9-]{2,63}$ ]]; then
-            echo "FAIL: branch must be approved/<id> (lowercase letters, digits, hyphens)"
+          if [[ "$HEAD_BRANCH" =~ ^approved/[a-z][a-z0-9-]{2,63}$ ]]; then
+            APPROVAL_ID="${HEAD_BRANCH#approved/}"
+            SPEC=".change-control/approvals/${APPROVAL_ID}.json"
+            if [ ! -f "$SPEC" ]; then
+              echo "FAIL: no trusted pre-approved manifest: $SPEC"
+              exit 1
+            fi
+            python3 tools/change_scope_guard.py --base "$BASE_SHA" --head "$HEAD_SHA" --spec "$SPEC"
+          elif [[ "$HEAD_BRANCH" =~ ^setup/approval-[a-z][a-z0-9-]{2,63}$ ]]; then
+            APPROVAL_ID="${HEAD_BRANCH#setup/approval-}"
+            python3 tools/validate_scope_approval.py --base "$BASE_SHA" --head "$HEAD_SHA" --name "$APPROVAL_ID"
+          else
+            echo "FAIL: branch must be approved/<id> or setup/approval-<id>"
             exit 1
           fi
-          APPROVAL_ID="${HEAD_BRANCH#approved/}"
-          SPEC=".change-control/approvals/${APPROVAL_ID}.json"
-          if [ ! -f "$SPEC" ]; then
-            echo "FAIL: no trusted pre-approved manifest: $SPEC"
-            exit 1
-          fi
-          python3 tools/change_scope_guard.py --base "$BASE_SHA" --head "$HEAD_SHA" --spec "$SPEC"
