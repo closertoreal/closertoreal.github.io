@@ -41,7 +41,31 @@ hub.setAttribute("aria-label","Комментарии протокола и эк
 panel.append(hub);
 document.getElementById("prcHeading").textContent="Правки и комментарии";
 document.getElementById("prcCount").textContent="Протокол и экспертные замечания";
-const data=()=>expertRecords.concat(protocolRecords());
+
+const editKey="sid-working-review-v1";
+let working={records:{},added:[]};try{const v=JSON.parse(localStorage.getItem(editKey)||"null");if(v&&v.records&&Array.isArray(v.added))working=v}catch(e){}
+const overlay=id=>working.records[id]||(working.records[id]={});
+function saveWorking(){try{localStorage.setItem(editKey,JSON.stringify(working));return true}catch(e){return false}}
+const originals=()=>expertRecords.concat(protocolRecords(),(window.SID_OPEN_QUESTIONS||[]).map(q=>({id:"OPEN-"+q.id,origin:"question",kind:"Открытый вопрос",text:q.question,note:q.reason,steps:q.steps,sourceBox:q.field})),working.added);
+const data=()=>originals().map(r=>{const w=working.records[r.id]||{};return {...r,working:w,comment:r.origin==="expert"?(w.text??r.comment):r.comment,text:r.origin!=="expert"?(w.text??r.text):r.text}});
+function controlOptions(value){return [["pending","Не решено"],["accept","Принять"],["reject","Отклонить"]].map(([v,t])=>'<option value="'+v+'"'+(value===v?' selected':'')+'>'+t+'</option>').join("")}
+function editableItems(r,kind){const w=r.working||{},initial=kind==="questions"?(r.questions||[]).map(q=>({text:q.question,note:q.answer})): (r.proposals||[]).map(p=>({text:p.text,note:p.note||"",step:p.step,field:p.field}));return w[kind]||initial}
+function editor(r){
+ const w=r.working||{},baseText=r.origin==="expert"?r.comment:r.text;
+ const child=(kind,title)=>'<fieldset><legend>'+title+'</legend>'+editableItems(r,kind).map((item,i)=>'<div><label>Формулировка '+(i+1)+(item.step?' · шаг '+esc(item.step):'')+'</label><textarea data-er-child="'+kind+'" data-er-index="'+i+'" data-er-prop="text">'+esc(item.text)+'</textarea><label>Примечание</label><textarea data-er-child="'+kind+'" data-er-index="'+i+'" data-er-prop="note">'+esc(item.note||"")+'</textarea><select aria-label="Решение по пункту" data-er-child="'+kind+'" data-er-index="'+i+'" data-er-prop="decision">'+controlOptions(item.decision||"pending")+'</select><label class="er-edit-done"><input type="checkbox" data-er-child="'+kind+'" data-er-index="'+i+'" data-er-prop="done"'+(item.done?' checked':'')+'> Выполнено</label></div>').join("")+'<button type="button" data-er-add-child="'+kind+'">+ Добавить</button></fieldset>';
+ return '<section class="er-working-editor"><strong>Редактор решения</strong><div class="er-edit-status"><select aria-label="Решение по записи" data-er-edit="decision">'+controlOptions(w.decision||"pending")+'</select><label class="er-edit-done"><input type="checkbox" data-er-edit="done"'+(w.done?' checked':'')+'> Выполнено</label><small id="erSaveStatus">Изменения сохраняются в этом браузере. Схема не меняется.</small></div><label>Комментарий / вопрос / предложение<textarea data-er-edit="text">'+esc(baseText||"")+'</textarea></label><label>Рабочая заметка<textarea data-er-edit="note">'+esc(w.note??r.note??"")+'</textarea></label>'+child("questions","Вопросы")+child("proposals","Предложения")+'</section>';
+}
+function updateWorking(ev){
+ const t=ev.target;if(!selected||(!t.hasAttribute("data-er-edit")&&!t.hasAttribute("data-er-child")))return;
+ if(ev.type==="input"&&(t.tagName==="SELECT"||t.type==="checkbox"))return;
+ if(ev.type==="change"&&t.tagName==="TEXTAREA")return;
+ const r=data().find(x=>x.id===selected);if(!r)return;const w=overlay(selected),value=t.type==="checkbox"?t.checked:t.value;
+ if(t.hasAttribute("data-er-child")){const kind=t.dataset.erChild;if(!w[kind])w[kind]=editableItems(r,kind).map(x=>({...x}));const row=w[kind][Number(t.dataset.erIndex)];if(row)row[t.dataset.erProp]=value}
+ else w[t.dataset.erEdit]=value;
+ const ok=saveWorking();const status=hub.querySelector("#erSaveStatus");if(status)status.textContent=ok?"Сохранено локально. Схема не изменена.":"Не удалось сохранить в браузере.";
+ if(ev.type==="change"&&ok)refresh();
+}
+
 const atStep=()=>steps[state.index]?.code||"";
 const snippet=(t,n)=>{let s=String(t||"").replace(/\s+/g," ").trim();return s.length>n?s.slice(0,n-1).trimEnd()+"…":s};
 function matches(r){
@@ -71,7 +95,7 @@ function build(){
  hub.querySelector("#erScope").value=scope;
  hub.querySelector("#erDisputed").checked=disputed;
  hub.querySelector("#erSearch").value=search;
- hub.addEventListener("click",onClick);
+ hub.addEventListener("click",onClick);hub.addEventListener("input",updateWorking);hub.addEventListener("change",updateWorking);
  hub.querySelector("#erScope").addEventListener("change",ev=>{scope=ev.target.value;selected=null;mobileDetail=false;refresh()});
  hub.querySelector("#erDisputed").addEventListener("change",ev=>{disputed=ev.target.checked;selected=null;mobileDetail=false;refresh()});
  hub.querySelector("#erSearch").addEventListener("input",ev=>{search=ev.target.value.trim().toLowerCase();selected=null;mobileDetail=false;refresh()});
@@ -79,17 +103,17 @@ function build(){
 }
 function label(r){
  if(r.origin==="expert")return 'Эксперт '+esc(r.sourceColumn)+' · '+(schemeVersion()==="old"?"шаг ":"исходный шаг ")+esc(r.oldStep);
- return r.n?'Протокол · №'+r.n:'Протокол · доп. запись';
+ if(r.origin==="question")return "Открытый вопрос";if(r.origin==="own")return "Моя запись";return r.n?'Протокол · №'+r.n:'Протокол · доп. запись';
 }
 function listItem(r){
  const active=r.id===selected;
  const subject=r.origin==="expert"?r.comment:r.text;
  const state=r.origin==="expert"&&r.status==="disputed"?'<span class="er-flag">Вопрос РГ</span>':"";
- return '<button type="button" role="option" aria-selected="'+String(active)+'" data-er-item="'+esc(r.id)+'" class="er-item'+(active?" is-selected":"")+' '+r.origin+'">'+
+ return '<div class="er-work-row'+(r.working?.done?" is-done":"")+'"><input type="checkbox" class="er-done-check" aria-label="Выполнено" data-er-done="'+esc(r.id)+'"'+(r.working?.done?" checked":"")+'> <button type="button" role="option" aria-selected="'+String(active)+'" data-er-item="'+esc(r.id)+'" class="er-item'+(active?" is-selected":"")+' '+r.origin+'">'+
  '<span class="er-item-meta"><span class="er-source-name">'+label(r)+'</span>'+state+'</span>'+
  '<span class="er-item-text">'+esc(snippet(subject,145))+'</span>'+
  (scope==="all"?'<span class="er-item-steps">'+(schemeVersion()==="old"?"Старая схема":"Новая схема")+': '+esc(actualSteps(r).join(", ")||"без шага")+'</span>':"")+
- '</button>';
+ '</button></div>';
 }
 function currentField(p){
  const step=steps.find(x=>x.code===p.step);
@@ -152,13 +176,13 @@ function refresh(){
  hub.querySelector(".er-expand").textContent=expanded?"Свернуть":"Развернуть";
  hub.querySelector(".er-expand").setAttribute("aria-pressed",String(expanded));
  const list=hub.querySelector("#erList"),previousScroll=list.scrollTop;
- list.innerHTML=visible.length?visible.map(listItem).join("")+
+ list.innerHTML='<button type="button" class="er-new-item" data-er-new>+ Своя запись к шагу</button>'+(visible.length?visible.map(listItem).join("")+
  (scope==="step"?'<button type="button" class="er-more" data-er-all>Посмотреть все '+all.length+' записей</button>':""):
  '<div class="er-list-empty">По этому фильтру записей нет.'+
- (scope==="step"?'<button type="button" data-er-all>Посмотреть все шаги</button>':"")+'</div>';
+ (scope==="step"?'<button type="button" data-er-all>Посмотреть все шаги</button>':"")+'</div>');
  list.scrollTop=previousScroll;
  const record=all.find(x=>x.id===selected);
- hub.querySelector("#erDetail").innerHTML=record?(record.origin==="expert"?expertDetail(record):protocolDetail(record)):
+ hub.querySelector("#erDetail").innerHTML=record?(editor(record)+'<details class="er-source-detail"><summary>Исходная запись и ссылки</summary>'+(record.origin==="expert"?expertDetail(originals().find(x=>x.id===record.id)||record):protocolDetail(originals().find(x=>x.id===record.id)||record))+'</details>'):
  '<div class="er-detail-empty">Выбери комментарий слева, чтобы увидеть исходный текст, связанные шаги и предлагаемую правку. Схема остаётся на этом же экране.</div>';
  hub.classList.toggle("er-mobile-detail",mobileDetail&&!!record);
 }
@@ -173,7 +197,11 @@ function goStep(code){
  if(window.innerWidth<1000)document.querySelector(".step-panel")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function onClick(ev){
+ const check=ev.target.closest("[data-er-done]");
+ if(check){overlay(check.dataset.erDone).done=check.checked;if(saveWorking())refresh();return}
  const b=ev.target.closest("button");
+ if(b?.hasAttribute("data-er-new")){const id="OWN-"+Date.now()+"-"+working.added.length;working.added.push({id,origin:"own",kind:"Комментарий",text:"",steps:[atStep()],note:""});selected=id;source="all";hub.querySelector("#erSearch").value="";search="";disputed=false;hub.querySelector("#erDisputed").checked=false;mobileDetail=true;saveWorking();refresh();hub.querySelector('[data-er-edit="text"]')?.focus();return}
+ if(b?.hasAttribute("data-er-add-child")&&selected){const r=data().find(x=>x.id===selected),w=overlay(selected),kind=b.dataset.erAddChild;if(r){if(!w[kind])w[kind]=editableItems(r,kind).map(x=>({...x}));w[kind].push({text:"",note:"",decision:"pending",done:false});saveWorking();refresh();hub.querySelector('[data-er-child="'+kind+'"][data-er-index="'+(w[kind].length-1)+'"][data-er-prop="text"]')?.focus()}return}
  if(!b||!hub.contains(b))return;
  if(b.hasAttribute("data-er-source")){source=b.dataset.erSource;selected=null;mobileDetail=false;refresh();return}
  if(b.hasAttribute("data-er-all")){scope="all";hub.querySelector("#erScope").value="all";selected=null;mobileDetail=false;refresh();return}
@@ -216,7 +244,7 @@ function followStep(){
 const title=document.getElementById("questionTitle");
 if(title)new MutationObserver(followStep).observe(title,{childList:true,subtree:true,characterData:true});
 window.addEventListener("storage",ev=>{if(ev.key==="sid-new-protocol-v1")refresh()});
-window.addEventListener("pageshow",refresh);
+window.addEventListener("pageshow",refresh);window.addEventListener("sidOpenQuestionsReady",refresh);
 window.addEventListener("sidSchemeChanged",()=>{
  selected=null;mobileDetail=false;followStep.previous=null;
  annotateDiagram();refresh();
