@@ -1,0 +1,54 @@
+{
+  "replacements": [
+    {
+      "path": "index.html",
+      "old": ".panel-index{display:grid;place-items:center;flex:0 0 28px;height:28px;font-size:11px;font-weight:750;border:1px solid #d0e0e3;border-radius:7px;color:#58757f;background:#fff}",
+      "new": ".panel-index{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;padding:0;width:28px;box-sizing:border-box;flex:0 0 28px;height:28px;font-size:11px;font-weight:750;border:1px solid #d0e0e3;border-radius:7px;color:#58757f;background:#fff}"
+    },
+    {
+      "path": "index.html",
+      "old": "<div class=\"step-recap\" aria-label=\"Текущий шаг\"></div><article class=\"content-card\" data-section=\"Вход\"",
+      "new": "<article class=\"content-card\" data-section=\"Вход\""
+    },
+    {
+      "path": "index.html",
+      "old": "<div class=\"step-recap\" aria-label=\"Текущий шаг\"></div><article class=\"content-card\" data-section=\"Действие\"",
+      "new": "<article class=\"content-card\" data-section=\"Действие\""
+    },
+    {
+      "path": "index.html",
+      "old": "<div class=\"step-recap\" aria-label=\"Текущий шаг\"></div><article class=\"content-card\" data-section=\"Выход\"",
+      "new": "<article class=\"content-card\" data-section=\"Выход\""
+    },
+    {
+      "path": "index.html",
+      "old": "document.querySelectorAll('.step-recap').forEach(n=>{n.innerHTML='<span class=\"recap-number\">Шаг '+esc(step.code)+'</span><span class=\"recap-name\">'+esc(step.title)+'</span>'});",
+      "new": ""
+    },
+    {
+      "path": "new/index.html",
+      "old": ".panel-index{display:grid;place-items:center;flex:0 0 28px;height:28px;font-size:11px;font-weight:750;border:1px solid #d0e0e3;border-radius:7px;color:#58757f;background:#fff}",
+      "new": ".panel-index{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;padding:0;width:28px;box-sizing:border-box;flex:0 0 28px;height:28px;font-size:11px;font-weight:750;border:1px solid #d0e0e3;border-radius:7px;color:#58757f;background:#fff}"
+    },
+    {
+      "path": "new/index.html",
+      "old": "<div class=\"step-recap\" aria-label=\"Текущий шаг\"></div><article class=\"content-card\" data-section=\"Вход\"",
+      "new": "<article class=\"content-card\" data-section=\"Вход\""
+    },
+    {
+      "path": "new/index.html",
+      "old": "<div class=\"step-recap\" aria-label=\"Текущий шаг\"></div><article class=\"content-card\" data-section=\"Действие\"",
+      "new": "<article class=\"content-card\" data-section=\"Действие\""
+    },
+    {
+      "path": "new/index.html",
+      "old": "<div class=\"step-recap\" aria-label=\"Текущий шаг\"></div><article class=\"content-card\" data-section=\"Выход\"",
+      "new": "<article class=\"content-card\" data-section=\"Выход\""
+    },
+    {
+      "path": "new/index.html",
+      "old": "document.querySelectorAll('.step-recap').forEach(n=>{n.innerHTML='<span class=\"recap-number\">Шаг '+esc(step.code)+'</span><span class=\"recap-name\">'+esc(step.title)+'</span>'});",
+      "new": ""
+    }
+  ]
+}
